@@ -11,6 +11,10 @@ import {
   Button,
   Tabs,
   Tab,
+  Select,
+  MenuItem,
+  FormControl,
+  InputLabel,
 } from "@mui/material";
 import {
   query,
@@ -26,56 +30,90 @@ import {
 import Link from "next/link";
 
 export default function Home() {
-  const [inventory, setInventory] = useState([]);
-  const [open, setOpen] = useState(true);
+  const [toWatch, setToWatch] = useState([]);
+  const [watched, setWatched] = useState([]);
+  const [open, setOpen] = useState(false);
   const [itemName, setItemName] = useState("");
   const [mode, setMode] = useState("toWatch");
+  const [priority, setPriority] = useState(1);
+  const [genre, setGenre] = useState("");
+  const [customGenre, setCustomGenre] = useState("");
+  const [isCustomGenre, setIsCustomGenre] = useState(false);
 
-  const updateInventory = async (currentMode) => {
-    const snapshot = query(
-      collection(firestore, "inventory"),
-      where("mode", "==", currentMode)
-    );
-    const docs = await getDocs(snapshot);
-    const inventoryList = [];
-    docs.forEach((doc) => {
-      inventoryList.push({
+  const predefinedGenres = [
+    "Action",
+    "Adventure",
+    "Comedy",
+    "Drama",
+    "Fantasy",
+    "Horror",
+    "Mystery",
+    "Romance",
+    "Sci-Fi",
+    "Slice of Life",
+    "Sports",
+    "Thriller",
+  ];
+
+  const updateLists = async () => {
+    const toWatchSnapshot = await getDocs(collection(firestore, "to-watch"));
+    const watchedSnapshot = await getDocs(collection(firestore, "watched"));
+
+    const toWatchList = [];
+    toWatchSnapshot.forEach((doc) => {
+      toWatchList.push({
         name: doc.id,
         ...doc.data(),
       });
     });
-    setInventory(inventoryList);
+    setToWatch(toWatchList);
+
+    const watchedList = [];
+    watchedSnapshot.forEach((doc) => {
+      watchedList.push({
+        name: doc.id,
+        ...doc.data(),
+      });
+    });
+    setWatched(watchedList);
   };
 
   const removeItem = async (item) => {
-    const docRef = doc(firestore, "inventory", item);
+    const docRef = doc(
+      firestore,
+      mode === "toWatch" ? "to-watch" : "watched",
+      item
+    );
     const docSnap = await getDoc(docRef);
     if (docSnap.exists()) {
-      const { quantity } = docSnap.data();
-      if (quantity === 1) {
-        await deleteDoc(docRef);
-      } else {
-        await updateDoc(docRef, { quantity: quantity - 1 });
+      const { genre, priority } = docSnap.data();
+      await deleteDoc(docRef);
+      if (mode === "toWatch") {
+        // Move the item to the "watched" collection
+        const watchedDocRef = doc(firestore, "watched", item);
+        await setDoc(watchedDocRef, {
+          genre,
+          priority,
+        });
       }
     }
-    await updateInventory(mode);
+    await updateLists();
   };
 
   const addItem = async (item) => {
-    const docRef = doc(firestore, "inventory", item);
-    const docSnap = await getDoc(docRef);
-
-    if (docSnap.exists()) {
-      const { quantity } = docSnap.data();
-      await updateDoc(docRef, { quantity: quantity + 1 });
-    } else {
-      await setDoc(docRef, { quantity: 1, mode });
-    }
-    await updateInventory(mode);
+    const docRef = doc(
+      firestore,
+      mode === "toWatch" ? "to-watch" : "watched",
+      item
+    );
+    const finalGenre = isCustomGenre ? customGenre : genre;
+    await setDoc(docRef, { priority, genre: finalGenre });
+    await updateLists();
+    handleClose();
   };
 
   useEffect(() => {
-    updateInventory(mode);
+    updateLists();
   }, [mode]);
 
   const handleOpen = () => {
@@ -84,6 +122,11 @@ export default function Home() {
 
   const handleClose = () => {
     setOpen(false);
+    setItemName("");
+    setPriority(1);
+    setGenre("");
+    setCustomGenre("");
+    setIsCustomGenre(false);
   };
 
   const showNotification = (message) => {
@@ -114,7 +157,7 @@ export default function Home() {
         gap={2}
         flexDirection="column"
       >
-        <Typography variant="h2">Anime List</Typography>
+        <Typography variant="h2">Anime Lists</Typography>
         <Tabs value={mode} onChange={(_, newValue) => setMode(newValue)}>
           <Tab label="To Watch" value="toWatch" />
           <Tab label="Watched" value="watched" />
@@ -126,7 +169,7 @@ export default function Home() {
         </Box>
         <Box border="1px solid #333">
           <Box
-            width="800px"
+            width="1200px"
             height="100px"
             bgcolor="#ADD8E6"
             alignItems="center"
@@ -140,37 +183,171 @@ export default function Home() {
             </Box>
           </Box>
 
-          <Stack width="800px" height="300px" spacing={2} overflow="auto">
-            {inventory.map(({ name, quantity }) => (
-              <Box
-                key={name}
-                width="100%"
-                height="100px"
-                bgcolor="#f0f0f0"
-                display="flex"
-                justifyContent="space-between"
-                alignItems="center"
-                padding={5}
-              >
-                <Typography variant="h4" color="#333" textAlign="center">
-                  {name.charAt(0).toUpperCase() + name.slice(1)}
-                </Typography>
-                <Typography variant="h4" color="#333" textAlign="center">
-                  {quantity}
-                </Typography>
-                <Stack direction="row" spacing={2}>
-                  <Button variant="outlined" onClick={() => addItem(name)}>
-                    Add
-                  </Button>
-                  <Button variant="outlined" onClick={() => removeItem(name)}>
-                    Remove
-                  </Button>
-                </Stack>
-              </Box>
-            ))}
+          <Box
+            width="1200px"
+            display="flex"
+            justifyContent="space-between"
+            alignItems="center"
+            padding={2}
+            bgcolor="#f0f0f0"
+          >
+            <Typography variant="h6" color="#333" textAlign="center" flex={1}>
+              Name
+            </Typography>
+            <Typography variant="h6" color="#333" textAlign="center" flex={1}>
+              Genre
+            </Typography>
+            <Typography variant="h6" color="#333" textAlign="center" flex={1}>
+              Priority
+            </Typography>
+            <Typography variant="h6" color="#333" textAlign="center" flex={1}>
+              Action
+            </Typography>
+          </Box>
+
+          <Stack width="1200px" height="300px" spacing={2} overflow="auto">
+            {(mode === "toWatch" ? toWatch : watched).map(
+              ({ name, priority, genre }) => (
+                <Box
+                  key={name}
+                  width="100%"
+                  height="100px"
+                  bgcolor="#f0f0f0"
+                  display="flex"
+                  justifyContent="space-between"
+                  alignItems="center"
+                  padding={5}
+                >
+                  <Typography
+                    variant="h5"
+                    color="#333"
+                    textAlign="center"
+                    flex={1}
+                  >
+                    {name.charAt(0).toUpperCase() + name.slice(1)}
+                  </Typography>
+                  <Typography
+                    variant="h5"
+                    color="#333"
+                    textAlign="center"
+                    flex={1}
+                  >
+                    {genre}
+                  </Typography>
+                  <Typography
+                    variant="h5"
+                    color="#333"
+                    textAlign="center"
+                    flex={1}
+                  >
+                    {priority}
+                  </Typography>
+                  <Stack
+                    direction="row"
+                    spacing={2}
+                    flex={1}
+                    justifyContent="center"
+                  >
+                    <Button
+                      variant="outlined"
+                      onClick={() => {
+                        if (mode === "toWatch") {
+                          removeItem(name);
+                          showNotification(`${name} moved to Watched list`);
+                        } else {
+                          removeItem(name);
+                          showNotification(`${name} removed from Watched list`);
+                        }
+                      }}
+                    >
+                      {mode === "toWatch" ? "Move to Watched" : "Remove"}
+                    </Button>
+                  </Stack>
+                </Box>
+              )
+            )}
           </Stack>
         </Box>
       </Box>
+      <Modal open={open} onClose={handleClose}>
+        <Box
+          sx={{
+            position: "absolute",
+            top: "50%",
+            left: "50%",
+            transform: "translate(-50%, -50%)",
+            width: 400,
+            bgcolor: "background.paper",
+            boxShadow: 24,
+            p: 4,
+          }}
+        >
+          <Typography variant="h6" component="h2" gutterBottom>
+            Add New {mode === "toWatch" ? "To Watch" : "Watched"}
+          </Typography>
+          <TextField
+            fullWidth
+            label="Anime Name"
+            value={itemName}
+            onChange={(e) => setItemName(e.target.value)}
+            margin="normal"
+          />
+          <FormControl fullWidth margin="normal">
+            <InputLabel>Genre</InputLabel>
+            <Select
+              value={genre}
+              label="Genre"
+              onChange={(e) => {
+                if (e.target.value === "custom") {
+                  setIsCustomGenre(true);
+                  setGenre("");
+                } else {
+                  setIsCustomGenre(false);
+                  setGenre(e.target.value);
+                }
+              }}
+            >
+              {predefinedGenres.map((g) => (
+                <MenuItem key={g} value={g}>
+                  {g}
+                </MenuItem>
+              ))}
+              <MenuItem value="custom">Add Custom Genre</MenuItem>
+            </Select>
+          </FormControl>
+          {isCustomGenre && (
+            <TextField
+              fullWidth
+              label="Custom Genre"
+              value={customGenre}
+              onChange={(e) => setCustomGenre(e.target.value)}
+              margin="normal"
+            />
+          )}
+          <FormControl fullWidth margin="normal">
+            <InputLabel>Priority</InputLabel>
+            <Select
+              value={priority}
+              label="Priority"
+              onChange={(e) => setPriority(e.target.value)}
+            >
+              {[...Array(10)].map((_, index) => (
+                <MenuItem key={index + 1} value={index + 1}>
+                  {index + 1}{" "}
+                  {index === 0 ? "(Most)" : index === 9 ? "(Least)" : ""}
+                </MenuItem>
+              ))}
+            </Select>
+          </FormControl>
+          <Button
+            variant="contained"
+            onClick={() => addItem(itemName)}
+            sx={{ mt: 2 }}
+          >
+            Add Item
+          </Button>
+        </Box>
+      </Modal>
     </>
   );
 }
