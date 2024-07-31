@@ -28,6 +28,7 @@ import {
   where,
 } from "firebase/firestore";
 import Link from "next/link";
+import Script from "next/script";
 
 export default function Home() {
   const [toWatch, setToWatch] = useState([]);
@@ -148,6 +149,19 @@ export default function Home() {
 
   return (
     <>
+      <Script
+        async
+        src="https://www.googletagmanager.com/gtag/js?id=G-VP3XJ43XJ4"
+      />
+      <Script id="google-analytics">
+        {`
+          window.dataLayer = window.dataLayer || [];
+          function gtag(){dataLayer.push(arguments);}
+          gtag('js', new Date());
+
+          gtag('config', 'G-VP3XJ43XJ4');
+        `}
+      </Script>
       <Box
         width="100vw"
         height="100vh"
