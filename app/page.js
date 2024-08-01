@@ -354,9 +354,8 @@ export default function Home() {
                 <Image
                   src="/favicon.ico"
                   alt="ViewVault Logo"
-                  layout="fill"
-                  objectFit="contain"
-                  style={{ borderRadius: "20px" }}
+                  fill
+                  style={{ borderRadius: "20px", objectFit: "contain" }}
                 />
               </Box>
               <Typography
@@ -457,8 +456,8 @@ export default function Home() {
                 <Image
                   src="/profile-pic.png"
                   alt="User Profile"
-                  layout="fill"
-                  objectFit="cover"
+                  fill
+                  style={{ objectFit: "cover" }}
                 />
               </Box>
               <Menu
@@ -485,8 +484,8 @@ export default function Home() {
                     <Image
                       src="/profile-pic.png"
                       alt="User Profile"
-                      layout="fill"
-                      objectFit="cover"
+                      fill
+                      style={{ objectFit: "cover" }}
                     />
                   </Box>
                   <Typography variant="h6">
