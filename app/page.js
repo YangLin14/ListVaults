@@ -15,6 +15,8 @@ import {
   MenuItem,
   FormControl,
   InputLabel,
+  Menu,
+  MenuItem as MuiMenuItem,
 } from "@mui/material";
 import {
   query,
@@ -34,12 +36,14 @@ export default function Home() {
   const [toWatch, setToWatch] = useState([]);
   const [watched, setWatched] = useState([]);
   const [open, setOpen] = useState(false);
+  const [loginOpen, setLoginOpen] = useState(false);
   const [itemName, setItemName] = useState("");
   const [mode, setMode] = useState("toWatch");
   const [priority, setPriority] = useState(1);
   const [genre, setGenre] = useState("");
   const [customGenre, setCustomGenre] = useState("");
   const [isCustomGenre, setIsCustomGenre] = useState(false);
+  const [anchorEl, setAnchorEl] = useState(null);
 
   const predefinedGenres = [
     "Action",
@@ -130,6 +134,14 @@ export default function Home() {
     setIsCustomGenre(false);
   };
 
+  const handleLoginOpen = () => {
+    setLoginOpen(true);
+  };
+
+  const handleLoginClose = () => {
+    setLoginOpen(false);
+  };
+
   const showNotification = (message) => {
     const notification = document.createElement("div");
     notification.textContent = message;
@@ -145,6 +157,26 @@ export default function Home() {
     setTimeout(() => {
       document.body.removeChild(notification);
     }, 1000);
+  };
+
+  const handleProfileClick = (event) => {
+    setAnchorEl(event.currentTarget);
+  };
+
+  const handleMenuClose = () => {
+    setAnchorEl(null);
+  };
+
+  const handleLogout = () => {
+    // Add your logout logic here
+    console.log("User logged out");
+    handleMenuClose();
+  };
+
+  const handleLogin = () => {
+    // Add your login logic here
+    console.log("User logged in");
+    handleMenuClose();
   };
 
   return (
@@ -176,36 +208,151 @@ export default function Home() {
           overflowX: "hidden",
         }}
       >
-        <Box display="flex" alignItems="center" gap={2} marginTop="20px">
-          <Box
-            position="relative"
-            width="100px"
-            height="100px"
-            sx={{
-              "@media (max-width: 600px)": {
-                width: "60px",
-                height: "60px",
-              },
-            }}
-          >
-            <Image
-              src="/favicon.ico"
-              alt="ViewVault Logo"
-              layout="fill"
-              objectFit="contain"
-              style={{ borderRadius: "20px" }}
-            />
+        <Box
+          display="flex"
+          alignItems="center"
+          justifyContent="space-between"
+          width="100%"
+          padding="20px"
+        >
+          <Link href="/">
+            <Box display="flex" alignItems="center" gap={2}>
+              <Box
+                position="relative"
+                width="70px"
+                height="70px"
+                sx={{
+                  transition: "box-shadow 0.3s ease-in-out",
+                  borderRadius: "20px",
+                  "&:hover": {
+                    boxShadow: "0px 4px 15px rgba(0, 0, 0, 0.2)",
+                  },
+                  "@media (max-width: 600px)": {
+                    width: "50px",
+                    height: "50px",
+                  },
+                }}
+              >
+                <Image
+                  src="/favicon.ico"
+                  alt="ViewVault Logo"
+                  layout="fill"
+                  objectFit="contain"
+                  style={{ borderRadius: "20px" }}
+                />
+              </Box>
+              <Typography
+                variant="h5"
+                sx={{
+                  "@media (max-width: 600px)": {
+                    fontSize: "1.5rem",
+                  },
+                }}
+              >
+                ViewVault
+              </Typography>
+            </Box>
+          </Link>
+          <Box display="flex" alignItems="center" gap={6}>
+            <Link href="/lists">
+              <Typography
+                variant="h7"
+                sx={{
+                  cursor: "pointer",
+                  position: "relative",
+                  marginLeft: "20px",
+                  color: "#666",
+                  textDecoration: "none",
+                  "&:hover": {
+                    textDecoration: "underline",
+                  },
+                  "@media (max-width: 600px)": {
+                    fontSize: "1rem",
+                    marginLeft: "10px",
+                  },
+                }}
+              >
+                Lists
+              </Typography>
+            </Link>
+            <Box>
+              <Box
+                display="flex"
+                alignItems="center"
+                justifyContent="center"
+                width="50px"
+                height="50px"
+                sx={{
+                  borderRadius: "50%",
+                  overflow: "hidden",
+                  position: "relative",
+                  transition: "box-shadow 0.3s ease-in-out",
+                  "&:hover": {
+                    boxShadow: "0px 4px 15px rgba(0, 0, 0, 0.2)",
+                  },
+                  "@media (max-width: 600px)": {
+                    width: "40px",
+                    height: "40px",
+                  },
+                }}
+                onClick={handleProfileClick}
+              >
+                <Image
+                  src="/profile-pic.png"
+                  alt="User Profile"
+                  layout="fill"
+                  objectFit="cover"
+                />
+              </Box>
+              <Menu
+                anchorEl={anchorEl}
+                open={Boolean(anchorEl)}
+                onClose={handleMenuClose}
+              >
+                <Box
+                  display="flex"
+                  flexDirection="column"
+                  alignItems="center"
+                  padding="10px"
+                >
+                  <Box
+                    width="100px"
+                    height="100px"
+                    sx={{
+                      borderRadius: "50%",
+                      overflow: "hidden",
+                      position: "relative",
+                      marginBottom: "10px",
+                    }}
+                  >
+                    <Image
+                      src="/profile-pic.png"
+                      alt="User Profile"
+                      layout="fill"
+                      objectFit="cover"
+                    />
+                  </Box>
+                  <Typography variant="h6">User Name</Typography>
+                  <Button
+                    variant="contained"
+                    color="primary"
+                    onClick={handleLoginOpen}
+                    sx={{ marginTop: "10px" }}
+                  >
+                    Log In
+                  </Button>
+                  <Button
+                    variant="contained"
+                    color="error"
+                    onClick={handleLogout}
+                    sx={{ marginTop: "10px" }}
+                  >
+                    Log Out
+                  </Button>
+                </Box>
+              </Menu>
+            </Box>
           </Box>
-          <Typography
-            variant="h2"
-            sx={{
-              "@media (max-width: 600px)": {
-                fontSize: "2rem",
-              },
-            }}
-          >
-            Anime Lists
-          </Typography>
         </Box>
         <Tabs value={mode} onChange={(_, newValue) => setMode(newValue)}>
           <Tab label="To Watch" value="toWatch" />
@@ -440,6 +587,38 @@ export default function Home() {
             sx={{ mt: 2 }}
           >
             Add Item
+          </Button>
+        </Box>
+      </Modal>
+      <Modal open={loginOpen} onClose={handleLoginClose}>
+        <Box
+          sx={{
+            position: "absolute",
+            top: "50%",
+            left: "50%",
+            transform: "translate(-50%, -50%)",
+            width: 400,
+            bgcolor: "background.paper",
+            boxShadow: 24,
+            p: 4,
+            "@media (max-width: 600px)": {
+              width: "90%",
+            },
+          }}
+        >
+          <Typography variant="h6" component="h2" gutterBottom>
+            Login
+          </Typography>
+          <TextField fullWidth label="User Name" margin="normal" />
+          {/* <TextField fullWidth label="Email" margin="normal" /> */}
+          <TextField
+            fullWidth
+            label="Password"
+            type="password"
+            margin="normal"
+          />
+          <Button variant="contained" onClick={handleLogin} sx={{ mt: 2 }}>
+            Login
           </Button>
         </Box>
       </Modal>
