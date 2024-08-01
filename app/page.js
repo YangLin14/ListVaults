@@ -67,7 +67,7 @@ export default function Home() {
         ...doc.data(),
       });
     });
-    setToWatch(toWatchList);
+    setToWatch(toWatchList.sort((a, b) => a.priority - b.priority));
 
     const watchedList = [];
     watchedSnapshot.forEach((doc) => {
@@ -76,7 +76,7 @@ export default function Home() {
         ...doc.data(),
       });
     });
-    setWatched(watchedList);
+    setWatched(watchedList.sort((a, b) => a.priority - b.priority));
   };
 
   const removeItem = async (item) => {
@@ -163,15 +163,50 @@ export default function Home() {
         `}
       </Script>
       <Box
-        width="100vw"
-        height="100vh"
+        width="100%"
+        minHeight="100vh"
         display="flex"
-        justifyContent="center"
+        justifyContent="flex-start"
         alignItems="center"
         gap={2}
         flexDirection="column"
+        sx={{
+          background: "linear-gradient(to bottom right, #f5f5f5, #e8e8e8)",
+          padding: "20px",
+          overflowX: "hidden",
+        }}
       >
-        <Typography variant="h2">Anime Lists</Typography>
+        <Box display="flex" alignItems="center" gap={2} marginTop="20px">
+          <Box
+            position="relative"
+            width="100px"
+            height="100px"
+            sx={{
+              "@media (max-width: 600px)": {
+                width: "60px",
+                height: "60px",
+              },
+            }}
+          >
+            <Image
+              src="/favicon.ico"
+              alt="ViewVault Logo"
+              layout="fill"
+              objectFit="contain"
+              style={{ borderRadius: "20px" }}
+            />
+          </Box>
+          <Typography
+            variant="h2"
+            sx={{
+              "@media (max-width: 600px)": {
+                fontSize: "2rem",
+              },
+            }}
+          >
+            Anime Lists
+          </Typography>
+        </Box>
         <Tabs value={mode} onChange={(_, newValue) => setMode(newValue)}>
           <Tab label="To Watch" value="toWatch" />
           <Tab label="Watched" value="watched" />
@@ -181,24 +216,40 @@ export default function Home() {
             Add New Item
           </Button>
         </Box>
-        <Box border="1px solid #333">
+        <Box
+          border="1px solid #333"
+          sx={{
+            backgroundColor: "#ffffff",
+            width: "100%",
+            maxWidth: "1200px",
+            maxHeight: "600px",
+            display: "flex",
+            flexDirection: "column",
+          }}
+        >
           <Box
-            width="1200px"
-            height="100px"
+            width="100%"
             bgcolor="#ADD8E6"
             alignItems="center"
             justifyContent="center"
             display="flex"
+            padding="20px"
           >
-            <Box>
-              <Typography variant="h4" color="#333">
-                {mode === "toWatch" ? "To Watch" : "Watched"} Items
-              </Typography>
-            </Box>
+            <Typography
+              variant="h4"
+              color="#333"
+              sx={{
+                "@media (max-width: 600px)": {
+                  fontSize: "1.5rem",
+                },
+              }}
+            >
+              {mode === "toWatch" ? "To Watch" : "Watched"} Items
+            </Typography>
           </Box>
 
           <Box
-            width="1200px"
+            width="100%"
             display="flex"
             justifyContent="space-between"
             alignItems="center"
@@ -219,68 +270,95 @@ export default function Home() {
             </Typography>
           </Box>
 
-          <Stack width="1200px" height="300px" spacing={2} overflow="auto">
-            {(mode === "toWatch" ? toWatch : watched).map(
-              ({ name, priority, genre }) => (
-                <Box
-                  key={name}
-                  width="100%"
-                  height="100px"
-                  bgcolor="#f0f0f0"
-                  display="flex"
-                  justifyContent="space-between"
-                  alignItems="center"
-                  padding={5}
-                >
-                  <Typography
-                    variant="h5"
-                    color="#333"
-                    textAlign="center"
-                    flex={1}
+          <Box
+            sx={{
+              flexGrow: 1,
+              overflowY: "auto",
+            }}
+          >
+            <Stack width="100%" spacing={2}>
+              {(mode === "toWatch" ? toWatch : watched).map(
+                ({ name, priority, genre }) => (
+                  <Box
+                    key={name}
+                    width="100%"
+                    bgcolor="#f0f0f0"
+                    display="flex"
+                    justifyContent="space-between"
+                    alignItems="center"
+                    padding={2}
                   >
-                    {name.charAt(0).toUpperCase() + name.slice(1)}
-                  </Typography>
-                  <Typography
-                    variant="h5"
-                    color="#333"
-                    textAlign="center"
-                    flex={1}
-                  >
-                    {genre}
-                  </Typography>
-                  <Typography
-                    variant="h5"
-                    color="#333"
-                    textAlign="center"
-                    flex={1}
-                  >
-                    {priority}
-                  </Typography>
-                  <Stack
-                    direction="row"
-                    spacing={2}
-                    flex={1}
-                    justifyContent="center"
-                  >
-                    <Button
-                      variant="outlined"
-                      onClick={() => {
-                        if (mode === "toWatch") {
-                          removeItem(name);
-                          showNotification(`${name} moved to Watched list`);
-                        } else {
-                          removeItem(name);
-                          showNotification(`${name} removed from Watched list`);
-                        }
+                    <Typography
+                      variant="body1"
+                      color="#333"
+                      textAlign="center"
+                      flex={1}
+                      sx={{
+                        "@media (max-width: 600px)": {
+                          marginBottom: "10px",
+                        },
                       }}
                     >
-                      {mode === "toWatch" ? "Move to Watched" : "Remove"}
-                    </Button>
-                  </Stack>
-                </Box>
-              )
-            )}
-          </Stack>
+                      {name.charAt(0).toUpperCase() + name.slice(1)}
+                    </Typography>
+                    <Typography
+                      variant="body1"
+                      color="#333"
+                      textAlign="center"
+                      flex={1}
+                      sx={{
+                        "@media (max-width: 600px)": {
+                          marginBottom: "10px",
+                        },
+                      }}
+                    >
+                      {genre}
+                    </Typography>
+                    <Typography
+                      variant="body1"
+                      color="#333"
+                      textAlign="center"
+                      flex={1}
+                      sx={{
+                        "@media (max-width: 600px)": {
+                          marginBottom: "10px",
+                        },
+                      }}
+                    >
+                      {priority}
+                    </Typography>
+                    <Box
+                      flex={1}
+                      display="flex"
+                      justifyContent="center"
+                      sx={{
+                        "@media (max-width: 600px)": {
+                          width: "100%",
+                        },
+                      }}
+                    >
+                      <Button
+                        variant="outlined"
+                        onClick={() => {
+                          if (mode === "toWatch") {
+                            removeItem(name);
+                            showNotification(`${name} moved to Watched list`);
+                          } else {
+                            removeItem(name);
+                            showNotification(
+                              `${name} removed from Watched list`
+                            );
+                          }
+                        }}
+                      >
+                        {mode === "toWatch" ? "Move to Watched" : "Remove"}
+                      </Button>
+                    </Box>
+                  </Box>
+                )
+              )}
+            </Stack>
+          </Box>
         </Box>
       </Box>
       <Modal open={open} onClose={handleClose}>
@@ -294,6 +372,9 @@ export default function Home() {
             bgcolor: "background.paper",
             boxShadow: 24,
             p: 4,
+            "@media (max-width: 600px)": {
+              width: "90%",
+            },
           }}
         >
           <Typography variant="h6" component="h2" gutterBottom>
