@@ -367,7 +367,7 @@ export default function Home() {
                   },
                 }}
               >
-                ViewVault
+                ViewVaults
               </Typography>
             </Box>
           </Link>
