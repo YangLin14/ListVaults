@@ -367,7 +367,7 @@ export default function Home() {
                   },
                 }}
               >
-                ViewVaults
+                ListVaults
               </Typography>
             </Box>
           </Link>
