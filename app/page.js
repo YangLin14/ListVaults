@@ -37,6 +37,7 @@ export default function Home() {
   const [watched, setWatched] = useState([]);
   const [open, setOpen] = useState(false);
   const [loginOpen, setLoginOpen] = useState(false);
+  const [signupOpen, setSignupOpen] = useState(true); // Open signup modal by default
   const [itemName, setItemName] = useState("");
   const [mode, setMode] = useState("toWatch");
   const [priority, setPriority] = useState(1);
@@ -44,6 +45,13 @@ export default function Home() {
   const [customGenre, setCustomGenre] = useState("");
   const [isCustomGenre, setIsCustomGenre] = useState(false);
   const [anchorEl, setAnchorEl] = useState(null);
+  const [user, setUser] = useState(null);
+  const [loginError, setLoginError] = useState("");
+  const [signupError, setSignupError] = useState("");
+  const [listAnchorEl, setListAnchorEl] = useState(null);
+  const [lists, setLists] = useState([]);
+  const [newListName, setNewListName] = useState("");
+  const [selectedList, setSelectedList] = useState("");
 
   const predefinedGenres = [
     "Action",
@@ -61,8 +69,14 @@ export default function Home() {
   ];
 
   const updateLists = async () => {
-    const toWatchSnapshot = await getDocs(collection(firestore, "to-watch"));
-    const watchedSnapshot = await getDocs(collection(firestore, "watched"));
+    if (!user || !selectedList) return;
+
+    const toWatchSnapshot = await getDocs(
+      collection(firestore, `users/${user}/list-names/${selectedList}/to-watch`)
+    );
+    const watchedSnapshot = await getDocs(
+      collection(firestore, `users/${user}/list-names/${selectedList}/watched`)
+    );
 
     const toWatchList = [];
     toWatchSnapshot.forEach((doc) => {
@@ -83,10 +97,28 @@ export default function Home() {
     setWatched(watchedList.sort((a, b) => a.priority - b.priority));
   };
 
+  const updateListNames = async () => {
+    if (!user) return;
+
+    const listNamesSnapshot = await getDocs(
+      collection(firestore, `users/${user}/list-names`)
+    );
+
+    const listNames = [];
+    listNamesSnapshot.forEach((doc) => {
+      listNames.push(doc.id);
+    });
+    setLists(listNames);
+  };
+
   const removeItem = async (item) => {
+    if (!user || !selectedList) return;
+
     const docRef = doc(
       firestore,
-      mode === "toWatch" ? "to-watch" : "watched",
+      `users/${user}/list-names/${selectedList}/${
+        mode === "toWatch" ? "to-watch" : "watched"
+      }`,
       item
     );
     const docSnap = await getDoc(docRef);
@@ -95,7 +127,11 @@ export default function Home() {
       await deleteDoc(docRef);
       if (mode === "toWatch") {
         // Move the item to the "watched" collection
-        const watchedDocRef = doc(firestore, "watched", item);
+        const watchedDocRef = doc(
+          firestore,
+          `users/${user}/list-names/${selectedList}/watched`,
+          item
+        );
         await setDoc(watchedDocRef, {
           genre,
           priority,
@@ -106,9 +142,13 @@ export default function Home() {
   };
 
   const addItem = async (item) => {
+    if (!user || !selectedList) return;
+
     const docRef = doc(
       firestore,
-      mode === "toWatch" ? "to-watch" : "watched",
+      `users/${user}/list-names/${selectedList}/${
+        mode === "toWatch" ? "to-watch" : "watched"
+      }`,
       item
     );
     const finalGenre = isCustomGenre ? customGenre : genre;
@@ -118,8 +158,11 @@ export default function Home() {
   };
 
   useEffect(() => {
-    updateLists();
-  }, [mode]);
+    if (user) {
+      updateLists();
+      updateListNames();
+    }
+  }, [mode, user, selectedList]);
 
   const handleOpen = () => {
     setOpen(true);
@@ -140,6 +183,16 @@ export default function Home() {
 
   const handleLoginClose = () => {
     setLoginOpen(false);
+    setLoginError("");
+  };
+
+  const handleSignupOpen = () => {
+    setSignupOpen(true);
+  };
+
+  const handleSignupClose = () => {
+    setSignupOpen(false);
+    setSignupError("");
   };
 
   const showNotification = (message) => {
@@ -170,13 +223,78 @@ export default function Home() {
   const handleLogout = () => {
     // Add your logout logic here
     console.log("User logged out");
+    setUser(null);
+    setToWatch([]);
+    setWatched([]);
+    setLists([]);
+    setSelectedList("");
     handleMenuClose();
   };
 
-  const handleLogin = () => {
-    // Add your login logic here
-    console.log("User logged in");
-    handleMenuClose();
+  const handleLogin = async () => {
+    const userName = document.getElementById("login-username").value;
+    const password = document.getElementById("login-password").value;
+
+    const userDocRef = doc(firestore, "users", userName);
+    const userDocSnap = await getDoc(userDocRef);
+
+    if (userDocSnap.exists() && userDocSnap.data().password === password) {
+      setUser(userName);
+      console.log("User logged in");
+      handleMenuClose();
+      handleLoginClose();
+      updateLists(); // Load data after login
+      updateListNames(); // Load list names after login
+    } else {
+      setLoginError("Incorrect username or password");
+    }
+  };
+
+  const handleSignup = async () => {
+    const userName = document.getElementById("signup-username").value;
+    const password = document.getElementById("signup-password").value;
+
+    const userDocRef = doc(firestore, "users", userName);
+    const userDocSnap = await getDoc(userDocRef);
+
+    if (userDocSnap.exists()) {
+      setSignupError("Username already exists. Logging in...");
+      handleLogin();
+    } else {
+      await setDoc(userDocRef, { password });
+      setUser(userName);
+      console.log("User signed up and logged in");
+      handleMenuClose();
+      handleSignupClose();
+      updateLists(); // Load data after signup
+      updateListNames(); // Load list names after signup
+    }
+  };
+
+  const handleListClick = (event) => {
+    setListAnchorEl(event.currentTarget);
+  };
+
+  const handleListMenuClose = () => {
+    setListAnchorEl(null);
+  };
+
+  const handleAddList = async () => {
+    if (newListName.trim() !== "") {
+      const listDocRef = doc(
+        firestore,
+        `users/${user}/list-names`,
+        newListName
+      );
+      await setDoc(listDocRef, {});
+      setLists([...lists, newListName]);
+      setNewListName("");
+    }
+  };
+
+  const handleListNameClick = (listName) => {
+    setSelectedList(listName);
+    handleListMenuClose();
   };
 
   return (
@@ -254,7 +372,7 @@ export default function Home() {
             </Box>
           </Link>
           <Box display="flex" alignItems="center" gap={6}>
-            <Link href="/lists">
+            <Box>
               <Typography
                 variant="h7"
                 sx={{
@@ -271,10 +389,49 @@ export default function Home() {
                     marginLeft: "10px",
                   },
                 }}
+                onClick={handleListClick}
               >
                 Lists
               </Typography>
-            </Link>
+              <Menu
+                anchorEl={listAnchorEl}
+                open={Boolean(listAnchorEl)}
+                onClose={handleListMenuClose}
+              >
+                <Box
+                  display="flex"
+                  flexDirection="column"
+                  alignItems="center"
+                  padding="10px"
+                >
+                  {lists.map((list, index) => (
+                    <Typography
+                      key={index}
+                      variant="body1"
+                      sx={{ cursor: "pointer", textDecoration: "underline" }}
+                      onClick={() => handleListNameClick(list)}
+                    >
+                      {list}
+                    </Typography>
+                  ))}
+                  <TextField
+                    fullWidth
+                    label="New List Name"
+                    value={newListName}
+                    onChange={(e) => setNewListName(e.target.value)}
+                    margin="normal"
+                  />
+                  <Button
+                    variant="contained"
+                    color="primary"
+                    onClick={handleAddList}
+                    sx={{ marginTop: "10px" }}
+                  >
+                    Add List
+                  </Button>
+                </Box>
+              </Menu>
+            </Box>
             <Box>
               <Box
                 display="flex"
@@ -332,28 +489,57 @@ export default function Home() {
                       objectFit="cover"
                     />
                   </Box>
-                  <Typography variant="h6">User Name</Typography>
-                  <Button
-                    variant="contained"
-                    color="primary"
-                    onClick={handleLoginOpen}
-                    sx={{ marginTop: "10px" }}
-                  >
-                    Log In
-                  </Button>
-                  <Button
-                    variant="contained"
-                    color="error"
-                    onClick={handleLogout}
-                    sx={{ marginTop: "10px" }}
-                  >
-                    Log Out
-                  </Button>
+                  <Typography variant="h6">
+                    {user ? user : "User Name"}
+                  </Typography>
+                  {!user && (
+                    <Button
+                      variant="contained"
+                      color="primary"
+                      onClick={handleLoginOpen}
+                      sx={{ marginTop: "10px" }}
+                    >
+                      Log In
+                    </Button>
+                  )}
+                  {!user && (
+                    <Button
+                      variant="contained"
+                      color="secondary"
+                      onClick={handleSignupOpen}
+                      sx={{ marginTop: "10px" }}
+                    >
+                      Sign Up
+                    </Button>
+                  )}
+                  {user && (
+                    <Button
+                      variant="contained"
+                      color="error"
+                      onClick={handleLogout}
+                      sx={{ marginTop: "10px" }}
+                    >
+                      Log Out
+                    </Button>
+                  )}
                 </Box>
               </Menu>
             </Box>
           </Box>
         </Box>
+        {user && selectedList && (
+          <Typography
+            variant="h2"
+            color="#333"
+            sx={{
+              "@media (max-width: 600px)": {
+                fontSize: "1.5rem",
+              },
+            }}
+          >
+            {selectedList}
+          </Typography>
+        )}
         <Tabs value={mode} onChange={(_, newValue) => setMode(newValue)}>
           <Tab label="To Watch" value="toWatch" />
           <Tab label="Watched" value="watched" />
@@ -609,17 +795,86 @@ export default function Home() {
           <Typography variant="h6" component="h2" gutterBottom>
             Login
           </Typography>
-          <TextField fullWidth label="User Name" margin="normal" />
-          {/* <TextField fullWidth label="Email" margin="normal" /> */}
+          <TextField
+            fullWidth
+            label="User Name"
+            id="login-username"
+            margin="normal"
+          />
           <TextField
             fullWidth
             label="Password"
             type="password"
+            id="login-password"
             margin="normal"
           />
+          {loginError && (
+            <Typography variant="body2" color="error" gutterBottom>
+              {loginError}
+            </Typography>
+          )}
           <Button variant="contained" onClick={handleLogin} sx={{ mt: 2 }}>
             Login
           </Button>
+        </Box>
+      </Modal>
+      <Modal open={signupOpen} onClose={() => {}}>
+        <Box
+          sx={{
+            position: "absolute",
+            top: "50%",
+            left: "50%",
+            transform: "translate(-50%, -50%)",
+            width: 400,
+            bgcolor: "background.paper",
+            boxShadow: 24,
+            p: 4,
+            "@media (max-width: 600px)": {
+              width: "90%",
+            },
+          }}
+        >
+          <Typography variant="h6" component="h2" gutterBottom>
+            Sign Up
+          </Typography>
+          <TextField
+            fullWidth
+            label="User Name"
+            id="signup-username"
+            margin="normal"
+          />
+          <TextField
+            fullWidth
+            label="Password"
+            type="password"
+            id="signup-password"
+            margin="normal"
+          />
+          {signupError && (
+            <Typography variant="body2" color="error" gutterBottom>
+              {signupError}
+            </Typography>
+          )}
+          <Button variant="contained" onClick={handleSignup} sx={{ mt: 2 }}>
+            Sign Up
+          </Button>
+          <Typography
+            variant="body2"
+            color="primary"
+            sx={{
+              cursor: "pointer",
+              position: "absolute",
+              bottom: "40px",
+              right: "40px",
+              textDecoration: "underline",
+            }}
+            onClick={() => {
+              handleSignupClose();
+              handleLoginOpen();
+            }}
+          >
+            Existing user? Log in
+          </Typography>
         </Box>
       </Modal>
     </>
