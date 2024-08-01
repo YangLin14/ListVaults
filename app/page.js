@@ -301,7 +301,7 @@ export default function Home() {
     <>
       <Script
         async
-        src="https://www.googletagmanager.com/gtag/js?id=G-VP3XJ43XJ4"
+        src="https://www.googletagmanager.com/gtag/js?id=G-F6ZZF7ELH5"
       />
       <Script id="google-analytics">
         {`
@@ -309,7 +309,7 @@ export default function Home() {
           function gtag(){dataLayer.push(arguments);}
           gtag('js', new Date());
 
-          gtag('config', 'G-VP3XJ43XJ4');
+          gtag('config', 'G-F6ZZF7ELH5');
         `}
       </Script>
       <Box
