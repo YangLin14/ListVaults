@@ -1042,7 +1042,7 @@ export default function Home() {
           </Box>
         </Box>
       </Modal>
-      <Modal open={loginOpen} onClose={handleLoginClose}>
+      <Modal open={loginOpen} onClose={() => {}}>
         <Box
           sx={{
             position: "absolute",
@@ -1082,6 +1082,24 @@ export default function Home() {
           <Button variant="contained" onClick={handleLogin} sx={{ mt: 2 }}>
             Login
           </Button>
+          <Typography
+            variant="body2"
+            color="primary"
+            sx={{
+              cursor: "pointer",
+              textDecoration: "underline",
+              marginTop: "10px",
+              position: "absolute",
+              bottom: "40px",
+              right: "40px",
+            }}
+            onClick={() => {
+              handleLoginClose();
+              handleSignupOpen();
+            }}
+          >
+            New user? Sign up
+          </Typography>
         </Box>
       </Modal>
       <Modal open={signupOpen} onClose={() => {}}>
