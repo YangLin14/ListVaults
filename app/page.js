@@ -17,6 +17,11 @@ import {
   InputLabel,
   Menu,
   MenuItem as MuiMenuItem,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogContentText,
+  DialogTitle,
 } from "@mui/material";
 import {
   query,
@@ -31,7 +36,6 @@ import {
 } from "firebase/firestore";
 import Link from "next/link";
 import Script from "next/script";
-import { DragDropContext, Droppable, Draggable } from "react-beautiful-dnd";
 
 export default function Home() {
   const [toWatch, setToWatch] = useState([]);
@@ -55,6 +59,10 @@ export default function Home() {
   const [selectedList, setSelectedList] = useState("");
   const [editOpen, setEditOpen] = useState(false);
   const [editItem, setEditItem] = useState(null);
+  const [confirmOpen, setConfirmOpen] = useState(false);
+  const [itemToRemove, setItemToRemove] = useState(null);
+  const [confirmMessage, setConfirmMessage] = useState("");
+  const [listToRemove, setListToRemove] = useState(null);
 
   const predefinedGenres = [
     "Action",
@@ -126,20 +134,32 @@ export default function Home() {
     );
     const docSnap = await getDoc(docRef);
     if (docSnap.exists()) {
+      await deleteDoc(docRef);
+    }
+    await updateLists();
+  };
+
+  const moveItemToWatched = async (item) => {
+    if (!user || !selectedList) return;
+
+    const docRef = doc(
+      firestore,
+      `users/${user}/list-names/${selectedList}/to-watch`,
+      item
+    );
+    const docSnap = await getDoc(docRef);
+    if (docSnap.exists()) {
       const { genre, priority } = docSnap.data();
       await deleteDoc(docRef);
-      if (mode === "toWatch") {
-        // Move the item to the "watched" collection
-        const watchedDocRef = doc(
-          firestore,
-          `users/${user}/list-names/${selectedList}/watched`,
-          item
-        );
-        await setDoc(watchedDocRef, {
-          genre,
-          priority,
-        });
-      }
+      const watchedDocRef = doc(
+        firestore,
+        `users/${user}/list-names/${selectedList}/watched`,
+        item
+      );
+      await setDoc(watchedDocRef, {
+        genre,
+        priority,
+      });
     }
     await updateLists();
   };
@@ -174,6 +194,30 @@ export default function Home() {
     await updateDoc(docRef, { priority, genre: finalGenre });
     await updateLists();
     handleEditClose();
+  };
+
+  const removeItemFromFirebase = async (item) => {
+    if (!user || !selectedList) return;
+
+    const docRef = doc(
+      firestore,
+      `users/${user}/list-names/${selectedList}/${
+        mode === "toWatch" ? "to-watch" : "watched"
+      }`,
+      item.name
+    );
+    await deleteDoc(docRef);
+    await updateLists();
+    handleEditClose();
+  };
+
+  const removeListFromFirebase = async (listName) => {
+    if (!user) return;
+
+    const listDocRef = doc(firestore, `users/${user}/list-names`, listName);
+    await deleteDoc(listDocRef);
+    await updateListNames();
+    setSelectedList("");
   };
 
   useEffect(() => {
@@ -338,14 +382,36 @@ export default function Home() {
     handleListMenuClose();
   };
 
-  const onDragEnd = (result) => {
-    if (!result.destination) return;
+  const handleConfirmOpen = (item) => {
+    setItemToRemove(item);
+    if (mode === "toWatch") {
+      setConfirmMessage(`Move ${item} to the Watched list?`);
+    } else {
+      setConfirmMessage(`Are you sure to remove ${item}?`);
+    }
+    setConfirmOpen(true);
+  };
 
-    const reorderedLists = Array.from(lists);
-    const [removed] = reorderedLists.splice(result.source.index, 1);
-    reorderedLists.splice(result.destination.index, 0, removed);
+  const handleConfirmClose = () => {
+    setConfirmOpen(false);
+  };
 
-    setLists(reorderedLists);
+  const handleConfirmRemove = () => {
+    if (mode === "toWatch") {
+      moveItemToWatched(itemToRemove);
+      showNotification(`${itemToRemove} moved to Watched list`);
+    } else {
+      removeItem(itemToRemove);
+      showNotification(`${itemToRemove} removed from Watched list`);
+    }
+    setConfirmOpen(false);
+    handleEditClose(); // Close the edit menu after confirming removal
+  };
+
+  const handleConfirmRemoveList = () => {
+    removeListFromFirebase(listToRemove);
+    showNotification(`${listToRemove} list removed`);
+    setConfirmOpen(false);
   };
 
   return (
@@ -458,54 +524,51 @@ export default function Home() {
                   alignItems="center"
                   padding="10px"
                 >
-                  <DragDropContext onDragEnd={onDragEnd}>
-                    <Droppable droppableId="lists">
-                      {(provided) => (
-                        <div
-                          {...provided.droppableProps}
-                          ref={provided.innerRef}
-                        >
-                          {lists.map((list, index) => (
-                            <Draggable
-                              key={list}
-                              draggableId={list}
-                              index={index}
-                            >
-                              {(provided) => (
-                                <div
-                                  ref={provided.innerRef}
-                                  {...provided.draggableProps}
-                                  {...provided.dragHandleProps}
-                                  style={{
-                                    ...provided.draggableProps.style,
-                                    marginBottom: "10px",
-                                    cursor: "pointer",
-                                  }}
-                                  onClick={() => handleListNameClick(list)}
-                                >
-                                  <Typography
-                                    variant="body1"
-                                    sx={{
-                                      textAlign: "center",
-                                      padding: "5px 10px",
-                                      borderRadius: "5px",
-                                      "&:hover": {
-                                        backgroundColor: "#f0f0f0",
-                                      },
-                                    }}
-                                  >
-                                    {list.charAt(0).toUpperCase() +
-                                      list.slice(1).toLowerCase()}
-                                  </Typography>
-                                </div>
-                              )}
-                            </Draggable>
-                          ))}
-                          {provided.placeholder}
-                        </div>
-                      )}
-                    </Droppable>
-                  </DragDropContext>
+                  {lists.map((list, index) => (
+                    <Box
+                      key={list}
+                      display="flex"
+                      alignItems="center"
+                      justifyContent="space-between"
+                      width="100%"
+                      sx={{
+                        marginBottom: "10px",
+                        cursor: "pointer",
+                      }}
+                    >
+                      <Typography
+                        variant="body1"
+                        sx={{
+                          textAlign: "center",
+                          padding: "5px 10px",
+                          borderRadius: "5px",
+                          "&:hover": {
+                            backgroundColor: "#f0f0f0",
+                          },
+                        }}
+                        onClick={() => handleListNameClick(list)}
+                      >
+                        {list.charAt(0).toUpperCase() +
+                          list.slice(1).toLowerCase()}
+                      </Typography>
+                      <Button
+                        variant="outlined"
+                        color="error"
+                        onClick={() => {
+                          setConfirmMessage(`Remove ${list}?`);
+                          setListToRemove(list);
+                          setConfirmOpen(true);
+                        }}
+                        sx={{
+                          marginLeft: "2px",
+                          fontSize: "0.8rem",
+                          padding: "2px 5px",
+                        }}
+                      >
+                        Remove
+                      </Button>
+                    </Box>
+                  ))}
                   <TextField
                     fullWidth
                     label="New List Name"
@@ -624,6 +687,7 @@ export default function Home() {
             variant="h2"
             color="#333"
             sx={{
+              marginTop: "-30px",
               "@media (max-width: 600px)": {
                 fontSize: "1.5rem",
               },
@@ -703,7 +767,7 @@ export default function Home() {
           >
             <Stack width="100%" spacing={2}>
               {(mode === "toWatch" ? toWatch : watched).map(
-                ({ name, priority, genre }) => (
+                ({ name, priority, genre }, index) => (
                   <Box
                     key={name}
                     width="100%"
@@ -773,17 +837,7 @@ export default function Home() {
                       </Button>
                       <Button
                         variant="outlined"
-                        onClick={() => {
-                          if (mode === "toWatch") {
-                            removeItem(name);
-                            showNotification(`${name} moved to Watched list`);
-                          } else {
-                            removeItem(name);
-                            showNotification(
-                              `${name} removed from Watched list`
-                            );
-                          }
-                        }}
+                        onClick={() => handleConfirmOpen(name)}
                       >
                         {mode === "toWatch" ? "Move to Watched" : "Remove"}
                       </Button>
@@ -951,15 +1005,32 @@ export default function Home() {
               ))}
             </Select>
           </FormControl>
-          <Box display="flex" justifyContent="space-between" sx={{ mt: 2 }}>
+          <Box
+            display="flex"
+            justifyContent="space-between"
+            sx={{ mt: 2, gap: 1 }}
+          >
             <Button
               variant="contained"
+              size="small"
               onClick={() => editItemInFirebase(editItem)}
             >
               Save Changes
             </Button>
-            <Button variant="outlined" onClick={handleEditClose}>
+            <Button variant="outlined" size="small" onClick={handleEditClose}>
               Cancel
+            </Button>
+            <Button
+              variant="contained"
+              color="error"
+              size="small"
+              onClick={() => {
+                setConfirmMessage(`Are you sure to remove ${editItem.name}?`);
+                setItemToRemove(editItem.name);
+                setConfirmOpen(true);
+              }}
+            >
+              Remove Item
             </Button>
           </Box>
         </Box>
@@ -1065,6 +1136,33 @@ export default function Home() {
           </Typography>
         </Box>
       </Modal>
+      <Dialog
+        open={confirmOpen}
+        onClose={handleConfirmClose}
+        aria-labelledby="alert-dialog-title"
+        aria-describedby="alert-dialog-description"
+      >
+        <DialogTitle id="alert-dialog-title">{"Confirm Action"}</DialogTitle>
+        <DialogContent>
+          <DialogContentText id="alert-dialog-description">
+            {confirmMessage}
+          </DialogContentText>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={handleConfirmClose} color="primary">
+            Cancel
+          </Button>
+          <Button
+            onClick={
+              listToRemove ? handleConfirmRemoveList : handleConfirmRemove
+            }
+            color="primary"
+            autoFocus
+          >
+            Confirm
+          </Button>
+        </DialogActions>
+      </Dialog>
     </>
   );
 }
