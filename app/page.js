@@ -31,6 +31,7 @@ import {
 } from "firebase/firestore";
 import Link from "next/link";
 import Script from "next/script";
+import { DragDropContext, Droppable, Draggable } from "react-beautiful-dnd";
 
 export default function Home() {
   const [toWatch, setToWatch] = useState([]);
@@ -52,6 +53,8 @@ export default function Home() {
   const [lists, setLists] = useState([]);
   const [newListName, setNewListName] = useState("");
   const [selectedList, setSelectedList] = useState("");
+  const [editOpen, setEditOpen] = useState(false);
+  const [editItem, setEditItem] = useState(null);
 
   const predefinedGenres = [
     "Action",
@@ -157,6 +160,22 @@ export default function Home() {
     handleClose();
   };
 
+  const editItemInFirebase = async (item) => {
+    if (!user || !selectedList) return;
+
+    const docRef = doc(
+      firestore,
+      `users/${user}/list-names/${selectedList}/${
+        mode === "toWatch" ? "to-watch" : "watched"
+      }`,
+      item.name
+    );
+    const finalGenre = isCustomGenre ? customGenre : genre;
+    await updateDoc(docRef, { priority, genre: finalGenre });
+    await updateLists();
+    handleEditClose();
+  };
+
   useEffect(() => {
     if (user) {
       updateLists();
@@ -170,6 +189,25 @@ export default function Home() {
 
   const handleClose = () => {
     setOpen(false);
+    setItemName("");
+    setPriority(1);
+    setGenre("");
+    setCustomGenre("");
+    setIsCustomGenre(false);
+  };
+
+  const handleEditOpen = (item) => {
+    setEditItem(item);
+    setItemName(item.name);
+    setPriority(item.priority);
+    setGenre(item.genre);
+    setIsCustomGenre(false);
+    setEditOpen(true);
+  };
+
+  const handleEditClose = () => {
+    setEditOpen(false);
+    setEditItem(null);
     setItemName("");
     setPriority(1);
     setGenre("");
@@ -258,8 +296,11 @@ export default function Home() {
     const userDocSnap = await getDoc(userDocRef);
 
     if (userDocSnap.exists()) {
-      setSignupError("Username already exists. Logging in...");
-      handleLogin();
+      setSignupError("Username already exists. Directing to login.");
+      setTimeout(() => {
+        handleSignupClose();
+        handleLoginOpen();
+      }, 2000);
     } else {
       await setDoc(userDocRef, { password });
       setUser(userName);
@@ -295,6 +336,16 @@ export default function Home() {
   const handleListNameClick = (listName) => {
     setSelectedList(listName);
     handleListMenuClose();
+  };
+
+  const onDragEnd = (result) => {
+    if (!result.destination) return;
+
+    const reorderedLists = Array.from(lists);
+    const [removed] = reorderedLists.splice(result.source.index, 1);
+    reorderedLists.splice(result.destination.index, 0, removed);
+
+    setLists(reorderedLists);
   };
 
   return (
@@ -337,8 +388,8 @@ export default function Home() {
             <Box display="flex" alignItems="center" gap={2}>
               <Box
                 position="relative"
-                width="70px"
-                height="70px"
+                width="90px"
+                height="90px"
                 sx={{
                   transition: "box-shadow 0.3s ease-in-out",
                   borderRadius: "20px",
@@ -346,16 +397,16 @@ export default function Home() {
                     boxShadow: "0px 4px 15px rgba(0, 0, 0, 0.2)",
                   },
                   "@media (max-width: 600px)": {
-                    width: "50px",
-                    height: "50px",
+                    width: "70px",
+                    height: "70px",
                   },
                 }}
               >
                 <Image
-                  src="/favicon.ico"
+                  src="/logo.png"
                   alt="ViewVault Logo"
                   fill
-                  style={{ borderRadius: "20px", objectFit: "contain" }}
+                  style={{ borderRadius: "50px", objectFit: "contain" }}
                 />
               </Box>
               <Typography
@@ -370,7 +421,7 @@ export default function Home() {
               </Typography>
             </Box>
           </Link>
-          <Box display="flex" alignItems="center" gap={6}>
+          <Box display="flex" alignItems="center" gap={10}>
             <Box>
               <Typography
                 variant="h7"
@@ -396,6 +447,10 @@ export default function Home() {
                 anchorEl={listAnchorEl}
                 open={Boolean(listAnchorEl)}
                 onClose={handleListMenuClose}
+                sx={{
+                  marginLeft: "-60px",
+                  marginTop: "10px",
+                }}
               >
                 <Box
                   display="flex"
@@ -403,16 +458,54 @@ export default function Home() {
                   alignItems="center"
                   padding="10px"
                 >
-                  {lists.map((list, index) => (
-                    <Typography
-                      key={index}
-                      variant="body1"
-                      sx={{ cursor: "pointer", textDecoration: "underline" }}
-                      onClick={() => handleListNameClick(list)}
-                    >
-                      {list}
-                    </Typography>
-                  ))}
+                  <DragDropContext onDragEnd={onDragEnd}>
+                    <Droppable droppableId="lists">
+                      {(provided) => (
+                        <div
+                          {...provided.droppableProps}
+                          ref={provided.innerRef}
+                        >
+                          {lists.map((list, index) => (
+                            <Draggable
+                              key={list}
+                              draggableId={list}
+                              index={index}
+                            >
+                              {(provided) => (
+                                <div
+                                  ref={provided.innerRef}
+                                  {...provided.draggableProps}
+                                  {...provided.dragHandleProps}
+                                  style={{
+                                    ...provided.draggableProps.style,
+                                    marginBottom: "10px",
+                                    cursor: "pointer",
+                                  }}
+                                  onClick={() => handleListNameClick(list)}
+                                >
+                                  <Typography
+                                    variant="body1"
+                                    sx={{
+                                      textAlign: "center",
+                                      padding: "5px 10px",
+                                      borderRadius: "5px",
+                                      "&:hover": {
+                                        backgroundColor: "#f0f0f0",
+                                      },
+                                    }}
+                                  >
+                                    {list.charAt(0).toUpperCase() +
+                                      list.slice(1).toLowerCase()}
+                                  </Typography>
+                                </div>
+                              )}
+                            </Draggable>
+                          ))}
+                          {provided.placeholder}
+                        </div>
+                      )}
+                    </Droppable>
+                  </DragDropContext>
                   <TextField
                     fullWidth
                     label="New List Name"
@@ -671,6 +764,15 @@ export default function Home() {
                     >
                       <Button
                         variant="outlined"
+                        onClick={() =>
+                          handleEditOpen({ name, priority, genre })
+                        }
+                        sx={{ mr: 2 }}
+                      >
+                        Edit
+                      </Button>
+                      <Button
+                        variant="outlined"
                         onClick={() => {
                           if (mode === "toWatch") {
                             removeItem(name);
@@ -773,6 +875,93 @@ export default function Home() {
           >
             Add Item
           </Button>
+        </Box>
+      </Modal>
+      <Modal open={editOpen} onClose={() => {}}>
+        <Box
+          sx={{
+            position: "absolute",
+            top: "50%",
+            left: "50%",
+            transform: "translate(-50%, -50%)",
+            width: 400,
+            bgcolor: "background.paper",
+            boxShadow: 24,
+            p: 4,
+            "@media (max-width: 600px)": {
+              width: "90%",
+            },
+          }}
+        >
+          <Typography variant="h6" component="h2" gutterBottom>
+            Edit {mode === "toWatch" ? "To Watch" : "Watched"} Item
+          </Typography>
+          <TextField
+            fullWidth
+            label="Anime Name"
+            value={itemName}
+            onChange={(e) => setItemName(e.target.value)}
+            margin="normal"
+            disabled
+          />
+          <FormControl fullWidth margin="normal">
+            <InputLabel>Genre</InputLabel>
+            <Select
+              value={genre}
+              label="Genre"
+              onChange={(e) => {
+                if (e.target.value === "custom") {
+                  setIsCustomGenre(true);
+                  setGenre("");
+                } else {
+                  setIsCustomGenre(false);
+                  setGenre(e.target.value);
+                }
+              }}
+            >
+              {predefinedGenres.map((g) => (
+                <MenuItem key={g} value={g}>
+                  {g}
+                </MenuItem>
+              ))}
+              <MenuItem value="custom">Add Custom Genre</MenuItem>
+            </Select>
+          </FormControl>
+          {isCustomGenre && (
+            <TextField
+              fullWidth
+              label="Custom Genre"
+              value={customGenre}
+              onChange={(e) => setCustomGenre(e.target.value)}
+              margin="normal"
+            />
+          )}
+          <FormControl fullWidth margin="normal">
+            <InputLabel>Priority</InputLabel>
+            <Select
+              value={priority}
+              label="Priority"
+              onChange={(e) => setPriority(e.target.value)}
+            >
+              {[...Array(10)].map((_, index) => (
+                <MenuItem key={index + 1} value={index + 1}>
+                  {index + 1}{" "}
+                  {index === 0 ? "(Most)" : index === 9 ? "(Least)" : ""}
+                </MenuItem>
+              ))}
+            </Select>
+          </FormControl>
+          <Box display="flex" justifyContent="space-between" sx={{ mt: 2 }}>
+            <Button
+              variant="contained"
+              onClick={() => editItemInFirebase(editItem)}
+            >
+              Save Changes
+            </Button>
+            <Button variant="outlined" onClick={handleEditClose}>
+              Cancel
+            </Button>
+          </Box>
         </Box>
       </Modal>
       <Modal open={loginOpen} onClose={handleLoginClose}>
