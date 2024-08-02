@@ -66,6 +66,7 @@ export default function Home() {
   const [itemToRemove, setItemToRemove] = useState(null);
   const [confirmMessage, setConfirmMessage] = useState("");
   const [listToRemove, setListToRemove] = useState(null);
+  const [customCategories, setCustomCategories] = useState([]);
 
   const predefinedGenres = [
     "Action",
@@ -188,6 +189,7 @@ export default function Home() {
       releaseDate,
       episodes,
       notes,
+      customCategories,
     });
     await updateLists();
     handleClose();
@@ -210,6 +212,7 @@ export default function Home() {
       releaseDate,
       episodes,
       notes,
+      customCategories,
     });
     await updateLists();
     handleEditClose();
@@ -260,6 +263,7 @@ export default function Home() {
     setReleaseDate("");
     setEpisodes("");
     setNotes("");
+    setCustomCategories([]);
   };
 
   const handleEditOpen = (item) => {
@@ -271,6 +275,7 @@ export default function Home() {
     setEpisodes(item.episodes);
     setNotes(item.notes);
     setIsCustomGenre(false);
+    setCustomCategories(item.customCategories || []);
     setEditOpen(true);
   };
 
@@ -285,6 +290,7 @@ export default function Home() {
     setEpisodes("");
     setNotes("");
     setIsCustomGenre(false);
+    setCustomCategories([]);
   };
 
   const handleLoginOpen = () => {
@@ -441,6 +447,24 @@ export default function Home() {
     removeListFromFirebase(listToRemove);
     showNotification(`${listToRemove} list removed`);
     setConfirmOpen(false);
+  };
+
+  const handleAddCategory = () => {
+    setCustomCategories((prevCategories) => [
+      ...prevCategories,
+      { name: "", value: "" },
+    ]);
+  };
+
+  const handleCategoryChange = (index, field, value) => {
+    const updatedCategories = [...customCategories];
+    updatedCategories[index][field] = value;
+    setCustomCategories(updatedCategories);
+  };
+
+  const handleRemoveCategory = (index) => {
+    const updatedCategories = customCategories.filter((_, i) => i !== index);
+    setCustomCategories(updatedCategories);
   };
 
   return (
@@ -877,6 +901,22 @@ export default function Home() {
               >
                 Notes
               </Typography>
+              {customCategories.map((category, index) => (
+                <Typography
+                  key={index}
+                  variant="h6"
+                  color="#333"
+                  textAlign="center"
+                  flex={1}
+                  sx={{
+                    "@media (max-width: 600px)": {
+                      fontSize: "1rem",
+                    },
+                  }}
+                >
+                  {category.name}
+                </Typography>
+              ))}
               <Typography
                 variant="h6"
                 color="#333"
@@ -916,7 +956,15 @@ export default function Home() {
               >
                 {(mode === "toWatch" ? toWatch : watched).map(
                   (
-                    { name, priority, genre, releaseDate, episodes, notes },
+                    {
+                      name,
+                      priority,
+                      genre,
+                      releaseDate,
+                      episodes,
+                      notes,
+                      customCategories,
+                    },
                     index
                   ) => (
                     <Box
@@ -1012,6 +1060,24 @@ export default function Home() {
                       >
                         {notes}
                       </Typography>
+                      {customCategories.map((category, index) => (
+                        <Typography
+                          key={index}
+                          variant="body1"
+                          color="#333"
+                          textAlign="center"
+                          flex={1}
+                          sx={{
+                            "@media (max-width: 600px)": {
+                              marginBottom: "10px",
+                            },
+                          }}
+                        >
+                          {category.value}
+                        </Typography>
+                      ))}
+
+                      {/* Action Buttons */}
                       <Box
                         flex={1}
                         display="flex"
@@ -1033,6 +1099,7 @@ export default function Home() {
                               releaseDate,
                               episodes,
                               notes,
+                              customCategories,
                             })
                           }
                           sx={{ mr: 2 }}
@@ -1055,6 +1122,7 @@ export default function Home() {
           </Box>
         </Box>
       </Box>
+      {/* Add New Item Menu*/}
       <Modal open={open} onClose={handleClose}>
         <Box
           sx={{
@@ -1069,6 +1137,8 @@ export default function Home() {
             "@media (max-width: 600px)": {
               width: "90%",
             },
+            maxHeight: "90vh",
+            overflowY: "auto",
           }}
         >
           <Typography variant="h6" component="h2" gutterBottom>
@@ -1149,15 +1219,61 @@ export default function Home() {
               ))}
             </Select>
           </FormControl>
-          <Button
-            variant="contained"
-            onClick={() => addItem(itemName)}
-            sx={{ mt: 2 }}
-          >
-            Add Item
-          </Button>
+          {customCategories.map((category, index) => (
+            <Box
+              key={index}
+              display="flex"
+              alignItems="center"
+              gap={2}
+              margin="normal"
+            >
+              <TextField
+                fullWidth
+                label="Category Name"
+                value={category.name}
+                onChange={(e) =>
+                  handleCategoryChange(index, "name", e.target.value)
+                }
+                margin="normal"
+              />
+              <TextField
+                fullWidth
+                label="Category Value"
+                value={category.value}
+                onChange={(e) =>
+                  handleCategoryChange(index, "value", e.target.value)
+                }
+                margin="normal"
+              />
+              <Button
+                variant="outlined"
+                color="error"
+                size="small"
+                onClick={() => handleRemoveCategory(index)}
+              >
+                Remove
+              </Button>
+            </Box>
+          ))}
+
+          <Box display="flex" gap={2} sx={{ mt: 2 }}>
+            <Button
+              variant="contained"
+              color="success"
+              onClick={handleAddCategory}
+            >
+              Add Category
+            </Button>
+            <Button variant="outlined" size="small" onClick={handleClose}>
+              Cancel
+            </Button>
+            <Button variant="contained" onClick={() => addItem(itemName)}>
+              Add Item
+            </Button>
+          </Box>
         </Box>
       </Modal>
+      {/* Edit Item Menu*/}
       <Modal open={editOpen} onClose={() => {}}>
         <Box
           sx={{
@@ -1172,6 +1288,8 @@ export default function Home() {
             "@media (max-width: 600px)": {
               width: "90%",
             },
+            maxHeight: "90vh",
+            overflowY: "auto",
           }}
         >
           <Typography variant="h6" component="h2" gutterBottom>
@@ -1253,6 +1371,49 @@ export default function Home() {
               ))}
             </Select>
           </FormControl>
+          {customCategories.map((category, index) => (
+            <Box
+              key={index}
+              display="flex"
+              alignItems="center"
+              gap={2}
+              margin="normal"
+            >
+              <TextField
+                fullWidth
+                label="Category Name"
+                value={category.name}
+                onChange={(e) =>
+                  handleCategoryChange(index, "name", e.target.value)
+                }
+                margin="normal"
+              />
+              <TextField
+                fullWidth
+                label="Category Value"
+                value={category.value}
+                onChange={(e) =>
+                  handleCategoryChange(index, "value", e.target.value)
+                }
+                margin="normal"
+              />
+              <Button
+                variant="outlined"
+                color="error"
+                size="small"
+                onClick={() => handleRemoveCategory(index)}
+              >
+                Remove
+              </Button>
+            </Box>
+          ))}
+          <Button
+            variant="contained"
+            onClick={handleAddCategory}
+            sx={{ mt: 2 }}
+          >
+            Add Category
+          </Button>
           <Box
             display="flex"
             justifyContent="space-between"
