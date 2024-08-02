@@ -49,6 +49,9 @@ export default function Home() {
   const [genre, setGenre] = useState("");
   const [customGenre, setCustomGenre] = useState("");
   const [isCustomGenre, setIsCustomGenre] = useState(false);
+  const [releaseDate, setReleaseDate] = useState("");
+  const [episodes, setEpisodes] = useState("");
+  const [notes, setNotes] = useState("");
   const [anchorEl, setAnchorEl] = useState(null);
   const [user, setUser] = useState(null);
   const [loginError, setLoginError] = useState("");
@@ -149,7 +152,7 @@ export default function Home() {
     );
     const docSnap = await getDoc(docRef);
     if (docSnap.exists()) {
-      const { genre, priority } = docSnap.data();
+      const { genre, priority, releaseDate, episodes, notes } = docSnap.data();
       await deleteDoc(docRef);
       const watchedDocRef = doc(
         firestore,
@@ -159,9 +162,13 @@ export default function Home() {
       await setDoc(watchedDocRef, {
         genre,
         priority,
+        releaseDate,
+        episodes,
+        notes,
       });
     }
     await updateLists();
+    showNotification(`${item} moved to Watched list`);
   };
 
   const addItem = async (item) => {
@@ -175,7 +182,13 @@ export default function Home() {
       item
     );
     const finalGenre = isCustomGenre ? customGenre : genre;
-    await setDoc(docRef, { priority, genre: finalGenre });
+    await setDoc(docRef, {
+      priority,
+      genre: finalGenre,
+      releaseDate,
+      episodes,
+      notes,
+    });
     await updateLists();
     handleClose();
   };
@@ -191,7 +204,13 @@ export default function Home() {
       item.name
     );
     const finalGenre = isCustomGenre ? customGenre : genre;
-    await updateDoc(docRef, { priority, genre: finalGenre });
+    await updateDoc(docRef, {
+      priority,
+      genre: finalGenre,
+      releaseDate,
+      episodes,
+      notes,
+    });
     await updateLists();
     handleEditClose();
   };
@@ -238,6 +257,9 @@ export default function Home() {
     setGenre("");
     setCustomGenre("");
     setIsCustomGenre(false);
+    setReleaseDate("");
+    setEpisodes("");
+    setNotes("");
   };
 
   const handleEditOpen = (item) => {
@@ -245,6 +267,9 @@ export default function Home() {
     setItemName(item.name);
     setPriority(item.priority);
     setGenre(item.genre);
+    setReleaseDate(item.releaseDate);
+    setEpisodes(item.episodes);
+    setNotes(item.notes);
     setIsCustomGenre(false);
     setEditOpen(true);
   };
@@ -256,6 +281,9 @@ export default function Home() {
     setPriority(1);
     setGenre("");
     setCustomGenre("");
+    setReleaseDate("");
+    setEpisodes("");
+    setNotes("");
     setIsCustomGenre(false);
   };
 
@@ -403,7 +431,7 @@ export default function Home() {
       showNotification(`${itemToRemove} moved to Watched list`);
     } else {
       removeItem(itemToRemove);
-      showNotification(`${itemToRemove} removed from Watched list`);
+      showNotification(`${itemToRemove} removed`);
     }
     setConfirmOpen(false);
     handleEditClose(); // Close the edit menu after confirming removal
@@ -759,7 +787,16 @@ export default function Home() {
               Genre
             </Typography>
             <Typography variant="h6" color="#333" textAlign="center" flex={1}>
+              Episodes
+            </Typography>
+            <Typography variant="h6" color="#333" textAlign="center" flex={1}>
               Priority
+            </Typography>
+            <Typography variant="h6" color="#333" textAlign="center" flex={1}>
+              Release Date
+            </Typography>
+            <Typography variant="h6" color="#333" textAlign="center" flex={1}>
+              Notes
             </Typography>
             <Typography variant="h6" color="#333" textAlign="center" flex={1}>
               Action
@@ -774,7 +811,10 @@ export default function Home() {
           >
             <Stack width="100%" spacing={2}>
               {(mode === "toWatch" ? toWatch : watched).map(
-                ({ name, priority, genre }, index) => (
+                (
+                  { name, priority, genre, releaseDate, episodes, notes },
+                  index
+                ) => (
                   <Box
                     key={name}
                     width="100%"
@@ -821,7 +861,46 @@ export default function Home() {
                         },
                       }}
                     >
+                      {episodes}
+                    </Typography>
+                    <Typography
+                      variant="body1"
+                      color="#333"
+                      textAlign="center"
+                      flex={1}
+                      sx={{
+                        "@media (max-width: 600px)": {
+                          marginBottom: "10px",
+                        },
+                      }}
+                    >
                       {priority}
+                    </Typography>
+                    <Typography
+                      variant="body1"
+                      color="#333"
+                      textAlign="center"
+                      flex={1}
+                      sx={{
+                        "@media (max-width: 600px)": {
+                          marginBottom: "10px",
+                        },
+                      }}
+                    >
+                      {releaseDate}
+                    </Typography>
+                    <Typography
+                      variant="body1"
+                      color="#333"
+                      textAlign="center"
+                      flex={1}
+                      sx={{
+                        "@media (max-width: 600px)": {
+                          marginBottom: "10px",
+                        },
+                      }}
+                    >
+                      {notes}
                     </Typography>
                     <Box
                       flex={1}
@@ -836,7 +915,14 @@ export default function Home() {
                       <Button
                         variant="outlined"
                         onClick={() =>
-                          handleEditOpen({ name, priority, genre })
+                          handleEditOpen({
+                            name,
+                            priority,
+                            genre,
+                            releaseDate,
+                            episodes,
+                            notes,
+                          })
                         }
                         sx={{ mr: 2 }}
                       >
@@ -846,7 +932,7 @@ export default function Home() {
                         variant="outlined"
                         onClick={() => handleConfirmOpen(name)}
                       >
-                        {mode === "toWatch" ? "Move to Watched" : "Remove"}
+                        {mode === "toWatch" ? "Watched" : "Remove"}
                       </Button>
                     </Box>
                   </Box>
@@ -914,6 +1000,27 @@ export default function Home() {
               margin="normal"
             />
           )}
+          <TextField
+            fullWidth
+            label="Episodes"
+            value={episodes}
+            onChange={(e) => setEpisodes(e.target.value)}
+            margin="normal"
+          />
+          <TextField
+            fullWidth
+            label="Release Date"
+            value={releaseDate}
+            onChange={(e) => setReleaseDate(e.target.value)}
+            margin="normal"
+          />
+          <TextField
+            fullWidth
+            label="Notes"
+            value={notes}
+            onChange={(e) => setNotes(e.target.value)}
+            margin="normal"
+          />
           <FormControl fullWidth margin="normal">
             <InputLabel>Priority</InputLabel>
             <Select
@@ -997,6 +1104,27 @@ export default function Home() {
               margin="normal"
             />
           )}
+          <TextField
+            fullWidth
+            label="Episodes"
+            value={episodes}
+            onChange={(e) => setEpisodes(e.target.value)}
+            margin="normal"
+          />
+          <TextField
+            fullWidth
+            label="Release Date"
+            value={releaseDate}
+            onChange={(e) => setReleaseDate(e.target.value)}
+            margin="normal"
+          />
+          <TextField
+            fullWidth
+            label="Notes"
+            value={notes}
+            onChange={(e) => setNotes(e.target.value)}
+            margin="normal"
+          />
           <FormControl fullWidth margin="normal">
             <InputLabel>Priority</InputLabel>
             <Select
@@ -1033,8 +1161,9 @@ export default function Home() {
               size="small"
               onClick={() => {
                 setConfirmMessage(`Are you sure to remove ${editItem.name}?`);
-                setItemToRemove(editItem.name);
-                setConfirmOpen(true);
+                removeItem(editItem.name);
+                showNotification(`${editItem.name} removed`);
+                handleEditClose();
               }}
             >
               Remove Item
