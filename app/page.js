@@ -745,10 +745,11 @@ export default function Home() {
           sx={{
             backgroundColor: "#ffffff",
             width: "100%",
-            maxWidth: "1200px",
-            maxHeight: "600px",
+            maxWidth: "1400px", // Make the container for the items wider
+            maxHeight: "1000px",
             display: "flex",
             flexDirection: "column",
+            overflowX: "auto", // Make the container scrollable in horizontal direction
           }}
         >
           <Box
@@ -771,174 +772,286 @@ export default function Home() {
               {mode === "toWatch" ? "To Watch" : "Watched"} Items
             </Typography>
           </Box>
-
           <Box
-            width="100%"
             display="flex"
-            justifyContent="space-between"
-            alignItems="center"
-            padding={2}
-            bgcolor="#f0f0f0"
-          >
-            <Typography variant="h6" color="#333" textAlign="center" flex={1}>
-              Name
-            </Typography>
-            <Typography variant="h6" color="#333" textAlign="center" flex={1}>
-              Genre
-            </Typography>
-            <Typography variant="h6" color="#333" textAlign="center" flex={1}>
-              Episodes
-            </Typography>
-            <Typography variant="h6" color="#333" textAlign="center" flex={1}>
-              Priority
-            </Typography>
-            <Typography variant="h6" color="#333" textAlign="center" flex={1}>
-              Release Date
-            </Typography>
-            <Typography variant="h6" color="#333" textAlign="center" flex={1}>
-              Notes
-            </Typography>
-            <Typography variant="h6" color="#333" textAlign="center" flex={1}>
-              Action
-            </Typography>
-          </Box>
-
-          <Box
+            flexDirection="column"
             sx={{
-              flexGrow: 1,
-              overflowY: "auto",
+              "@media (max-width: 600px)": {
+                flexDirection: "row",
+              },
             }}
           >
-            <Stack width="100%" spacing={2}>
-              {(mode === "toWatch" ? toWatch : watched).map(
-                (
-                  { name, priority, genre, releaseDate, episodes, notes },
-                  index
-                ) => (
-                  <Box
-                    key={name}
-                    width="100%"
-                    bgcolor="#f0f0f0"
-                    display="flex"
-                    justifyContent="space-between"
-                    alignItems="center"
-                    padding={2}
-                  >
-                    <Typography
-                      variant="body1"
-                      color="#333"
-                      textAlign="center"
-                      flex={1}
-                      sx={{
-                        "@media (max-width: 600px)": {
-                          marginBottom: "10px",
-                        },
-                      }}
-                    >
-                      {name.charAt(0).toUpperCase() + name.slice(1)}
-                    </Typography>
-                    <Typography
-                      variant="body1"
-                      color="#333"
-                      textAlign="center"
-                      flex={1}
-                      sx={{
-                        "@media (max-width: 600px)": {
-                          marginBottom: "10px",
-                        },
-                      }}
-                    >
-                      {genre}
-                    </Typography>
-                    <Typography
-                      variant="body1"
-                      color="#333"
-                      textAlign="center"
-                      flex={1}
-                      sx={{
-                        "@media (max-width: 600px)": {
-                          marginBottom: "10px",
-                        },
-                      }}
-                    >
-                      {episodes}
-                    </Typography>
-                    <Typography
-                      variant="body1"
-                      color="#333"
-                      textAlign="center"
-                      flex={1}
-                      sx={{
-                        "@media (max-width: 600px)": {
-                          marginBottom: "10px",
-                        },
-                      }}
-                    >
-                      {priority}
-                    </Typography>
-                    <Typography
-                      variant="body1"
-                      color="#333"
-                      textAlign="center"
-                      flex={1}
-                      sx={{
-                        "@media (max-width: 600px)": {
-                          marginBottom: "10px",
-                        },
-                      }}
-                    >
-                      {releaseDate}
-                    </Typography>
-                    <Typography
-                      variant="body1"
-                      color="#333"
-                      textAlign="center"
-                      flex={1}
-                      sx={{
-                        "@media (max-width: 600px)": {
-                          marginBottom: "10px",
-                        },
-                      }}
-                    >
-                      {notes}
-                    </Typography>
+            {/* Category Container */}
+            <Box
+              width="100%"
+              display="flex"
+              justifyContent="space-between"
+              alignItems="center"
+              padding={2}
+              bgcolor="#e0e0e0"
+              sx={{
+                "@media (max-width: 600px)": {
+                  width: "25%",
+                  flexDirection: "column",
+                  alignItems: "flex-start",
+                  backgroundColor: "#e0e0e0",
+                },
+              }}
+            >
+              <Typography
+                variant="h6"
+                color="#333"
+                textAlign="center"
+                flex={1}
+                sx={{
+                  "@media (max-width: 600px)": {
+                    fontSize: "1rem",
+                    marginTop: "-5px",
+                  },
+                }}
+              >
+                Name
+              </Typography>
+              <Typography
+                variant="h6"
+                color="#333"
+                textAlign="center"
+                flex={1}
+                sx={{
+                  "@media (max-width: 600px)": {
+                    fontSize: "1rem",
+                  },
+                }}
+              >
+                Genre
+              </Typography>
+              <Typography
+                variant="h6"
+                color="#333"
+                textAlign="center"
+                flex={1}
+                sx={{
+                  "@media (max-width: 600px)": {
+                    fontSize: "1rem",
+                  },
+                }}
+              >
+                Episodes
+              </Typography>
+              <Typography
+                variant="h6"
+                color="#333"
+                textAlign="center"
+                flex={1}
+                sx={{
+                  "@media (max-width: 600px)": {
+                    fontSize: "1rem",
+                  },
+                }}
+              >
+                Priority
+              </Typography>
+              <Typography
+                variant="h6"
+                color="#333"
+                textAlign="center"
+                flex={1}
+                sx={{
+                  "@media (max-width: 600px)": {
+                    fontSize: "1rem",
+                  },
+                }}
+              >
+                Date
+              </Typography>
+              <Typography
+                variant="h6"
+                color="#333"
+                textAlign="center"
+                flex={1}
+                sx={{
+                  "@media (max-width: 600px)": {
+                    fontSize: "1rem",
+                  },
+                }}
+              >
+                Notes
+              </Typography>
+              <Typography
+                variant="h6"
+                color="#333"
+                textAlign="center"
+                flex={1}
+                sx={{
+                  "@media (max-width: 600px)": {
+                    fontSize: "1rem",
+                  },
+                }}
+              >
+                Action
+              </Typography>
+            </Box>
+            {/* Item Container */}
+            <Box
+              sx={{
+                flexGrow: 1,
+                overflowY: "auto",
+                "@media (max-width: 600px)": {
+                  display: "flex",
+                  flexDirection: "row",
+                },
+              }}
+            >
+              <Stack
+                width="100%"
+                sx={{
+                  "@media (max-width: 600px)": {
+                    flexDirection: "row",
+                    "& > *:not(:last-child)": {
+                      marginRight: "10px",
+                      marginTop: "-1px",
+                    },
+                  },
+                }}
+              >
+                {(mode === "toWatch" ? toWatch : watched).map(
+                  (
+                    { name, priority, genre, releaseDate, episodes, notes },
+                    index
+                  ) => (
                     <Box
-                      flex={1}
+                      key={name}
+                      width="100%"
+                      bgcolor="#f0f0f0"
                       display="flex"
-                      justifyContent="center"
+                      justifyContent="space-between"
+                      alignItems="center"
+                      padding={2}
                       sx={{
                         "@media (max-width: 600px)": {
-                          width: "100%",
+                          flexDirection: "column",
+                          alignItems: "flex-start",
                         },
                       }}
                     >
-                      <Button
-                        variant="outlined"
-                        onClick={() =>
-                          handleEditOpen({
-                            name,
-                            priority,
-                            genre,
-                            releaseDate,
-                            episodes,
-                            notes,
-                          })
-                        }
-                        sx={{ mr: 2 }}
+                      <Typography
+                        variant="body1"
+                        color="#333"
+                        textAlign="center"
+                        flex={1}
+                        sx={{
+                          "@media (max-width: 600px)": {
+                            marginBottom: "10px",
+                          },
+                        }}
                       >
-                        Edit
-                      </Button>
-                      <Button
-                        variant="outlined"
-                        onClick={() => handleConfirmOpen(name)}
+                        {name.charAt(0).toUpperCase() + name.slice(1)}
+                      </Typography>
+                      <Typography
+                        variant="body1"
+                        color="#333"
+                        textAlign="center"
+                        flex={1}
+                        sx={{
+                          "@media (max-width: 600px)": {
+                            marginBottom: "10px",
+                          },
+                        }}
                       >
-                        {mode === "toWatch" ? "Watched" : "Remove"}
-                      </Button>
+                        {genre}
+                      </Typography>
+                      <Typography
+                        variant="body1"
+                        color="#333"
+                        textAlign="center"
+                        flex={1}
+                        sx={{
+                          "@media (max-width: 600px)": {
+                            marginBottom: "10px",
+                          },
+                        }}
+                      >
+                        {episodes}
+                      </Typography>
+                      <Typography
+                        variant="body1"
+                        color="#333"
+                        textAlign="center"
+                        flex={1}
+                        sx={{
+                          "@media (max-width: 600px)": {
+                            marginBottom: "10px",
+                          },
+                        }}
+                      >
+                        {priority}
+                      </Typography>
+                      <Typography
+                        variant="body1"
+                        color="#333"
+                        textAlign="center"
+                        flex={1}
+                        sx={{
+                          "@media (max-width: 600px)": {
+                            marginBottom: "10px",
+                          },
+                        }}
+                      >
+                        {releaseDate}
+                      </Typography>
+                      <Typography
+                        variant="body1"
+                        color="#333"
+                        textAlign="center"
+                        flex={1}
+                        sx={{
+                          "@media (max-width: 600px)": {
+                            marginBottom: "10px",
+                          },
+                        }}
+                      >
+                        {notes}
+                      </Typography>
+                      <Box
+                        flex={1}
+                        display="flex"
+                        justifyContent="center"
+                        sx={{
+                          "@media (max-width: 600px)": {
+                            width: "100%",
+                          },
+                        }}
+                      >
+                        <Button
+                          variant="outlined"
+                          size="small"
+                          onClick={() =>
+                            handleEditOpen({
+                              name,
+                              priority,
+                              genre,
+                              releaseDate,
+                              episodes,
+                              notes,
+                            })
+                          }
+                          sx={{ mr: 2 }}
+                        >
+                          Edit
+                        </Button>
+                        <Button
+                          variant="outlined"
+                          size="small"
+                          onClick={() => handleConfirmOpen(name)}
+                        >
+                          {mode === "toWatch" ? "Watched" : "Remove"}
+                        </Button>
+                      </Box>
                     </Box>
-                  </Box>
-                )
-              )}
-            </Stack>
+                  )
+                )}
+              </Stack>
+            </Box>
           </Box>
         </Box>
       </Box>
