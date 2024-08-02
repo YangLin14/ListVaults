@@ -372,8 +372,9 @@ export default function Home() {
         newListName
       );
       await setDoc(listDocRef, {});
-      setLists([...lists, newListName]);
+      setLists((prevLists) => [...prevLists, newListName]);
       setNewListName("");
+      setSelectedList(newListName); // Automatically select the new list
     }
   };
 
@@ -555,7 +556,7 @@ export default function Home() {
                         variant="outlined"
                         color="error"
                         onClick={() => {
-                          setConfirmMessage(`Remove ${list}?`);
+                          setConfirmMessage(`Are you sure to remove ${list}?`);
                           setListToRemove(list);
                           setConfirmOpen(true);
                         }}
@@ -582,7 +583,7 @@ export default function Home() {
                     onClick={handleAddList}
                     sx={{ marginTop: "10px" }}
                   >
-                    Add List
+                    Add To Lists
                   </Button>
                 </Box>
               </Menu>
@@ -701,9 +702,15 @@ export default function Home() {
           <Tab label="Watched" value="watched" />
         </Tabs>
         <Box>
-          <Button variant="contained" onClick={handleOpen}>
-            Add New Item
-          </Button>
+          {lists.length === 0 ? (
+            <Button variant="contained" onClick={handleListClick}>
+              Add New List
+            </Button>
+          ) : (
+            <Button variant="contained" onClick={handleOpen}>
+              Add New Item
+            </Button>
+          )}
         </Box>
         <Box
           border="1px solid #333"
