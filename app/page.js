@@ -815,6 +815,13 @@ export default function Home() {
               alignItems="center"
               padding={2}
               bgcolor="#e0e0e0"
+              sx={{
+                "@media (max-width: 600px)": {
+                  flexDirection: "column",
+                  alignItems: "flex-start",
+                  width: "40%",
+                },
+              }}
             >
               {[
                 "Name",
@@ -834,7 +841,9 @@ export default function Home() {
                   flex={1}
                   sx={{
                     "@media (max-width: 600px)": {
-                      fontSize: "0.8rem",
+                      fontSize: "1rem",
+                      textAlign: "left",
+                      width: "100%",
                     },
                   }}
                 >
@@ -844,17 +853,59 @@ export default function Home() {
             </Box>
 
             {/* Item Container */}
-            <Box sx={{ flexGrow: 1, overflowY: "auto" }}>
+            <Box
+              sx={{
+                flexGrow: 1,
+                overflowY: "auto",
+                "@media (max-width: 600px)": {
+                  flexDirection: "row",
+                  scrollSnapType: "y mandatory", // Enable snap scrolling
+                },
+                "&::-webkit-scrollbar": {
+                  width: "8px",
+                },
+                "&::-webkit-scrollbar-thumb": {
+                  backgroundColor: "#888",
+                  borderRadius: "20px",
+                },
+                "&::-webkit-scrollbar-thumb:hover": {
+                  backgroundColor: "#555",
+                },
+                "&:after": {
+                  content: '""',
+                  display: "block",
+                  height: "20px",
+                  width: "100%",
+                  background:
+                    "linear-gradient(to bottom, transparent, lightgrey)",
+                  borderBottomLeftRadius: "50%",
+                  borderBottomRightRadius: "50%",
+                  animation: "fadeIn 1s ease-in-out",
+                },
+                "@keyframes fadeIn": {
+                  "0%": { opacity: 0 },
+                  "100%": { opacity: 1 },
+                },
+              }}
+            >
               {(mode === "toWatch" ? toWatch : watched).map(
                 (item, rowIndex) => (
                   <Box
                     key={rowIndex}
-                    width="100%"
+                    width="auto"
+                    height="100%"
                     bgcolor={rowIndex % 2 === 0 ? "#f0f0f0" : "#ffffff"}
                     display="flex"
                     justifyContent="space-between"
                     alignItems="center"
                     padding={2}
+                    sx={{
+                      "@media (max-width: 600px)": {
+                        flexDirection: "column",
+                        alignItems: "flex-start",
+                        scrollSnapAlign: "start", // Snap items to the start
+                      },
+                    }}
                   >
                     {[
                       item.name,
@@ -869,7 +920,16 @@ export default function Home() {
                         );
                         return categoryItem ? categoryItem.value : "";
                       }),
-                      <Box key="actions" display="flex" justifyContent="center">
+                      <Box
+                        key="actions"
+                        display="flex"
+                        justifyContent="center"
+                        sx={{
+                          "@media (max-width: 600px)": {
+                            flexDirection: "row",
+                          },
+                        }}
+                      >
                         <Button
                           variant="outlined"
                           size="small"
@@ -895,7 +955,7 @@ export default function Home() {
                         flex={1}
                         sx={{
                           "@media (max-width: 600px)": {
-                            fontSize: "0.8rem",
+                            fontSize: "1rem",
                           },
                         }}
                       >
