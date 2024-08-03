@@ -518,6 +518,7 @@ export default function Home() {
                   "@media (max-width: 600px)": {
                     width: "70px",
                     height: "70px",
+                    marginLeft: "-20px",
                   },
                 }}
               >
@@ -532,7 +533,8 @@ export default function Home() {
                 variant="h5"
                 sx={{
                   "@media (max-width: 600px)": {
-                    fontSize: "1.5rem",
+                    fontSize: "1.3rem",
+                    marginLeft: "-10px",
                   },
                 }}
               >
@@ -540,14 +542,14 @@ export default function Home() {
               </Typography>
             </Box>
           </Link>
-          <Box display="flex" alignItems="center" gap={10}>
+          <Box display="flex" alignItems="center" gap={6}>
             <Box>
               <Typography
                 variant="h7"
                 sx={{
                   cursor: "pointer",
                   position: "relative",
-                  marginLeft: "20px",
+                  marginLeft: "10px",
                   color: "#666",
                   textDecoration: "none",
                   "&:hover": {
@@ -555,7 +557,7 @@ export default function Home() {
                   },
                   "@media (max-width: 600px)": {
                     fontSize: "1rem",
-                    marginLeft: "10px",
+                    marginLeft: "5px",
                   },
                 }}
                 onClick={handleListClick}
@@ -567,7 +569,7 @@ export default function Home() {
                 open={Boolean(listAnchorEl)}
                 onClose={handleListMenuClose}
                 sx={{
-                  marginLeft: "-60px",
+                  marginLeft: "-20px",
                   marginTop: "10px",
                 }}
               >
