@@ -862,11 +862,11 @@ export default function Home() {
                   scrollSnapType: "y mandatory", // Enable snap scrolling
                 },
                 "&::-webkit-scrollbar": {
-                  width: "8px",
+                  width: "5px",
                 },
                 "&::-webkit-scrollbar-thumb": {
                   backgroundColor: "#888",
-                  borderRadius: "20px",
+                  borderRadius: "50px",
                 },
                 "&::-webkit-scrollbar-thumb:hover": {
                   backgroundColor: "#555",
@@ -874,12 +874,12 @@ export default function Home() {
                 "&:after": {
                   content: '""',
                   display: "block",
-                  height: "20px",
+                  height: "10px",
                   width: "100%",
                   background:
-                    "linear-gradient(to bottom, transparent, lightgrey)",
-                  borderBottomLeftRadius: "50%",
-                  borderBottomRightRadius: "50%",
+                    "linear-gradient(to bottom, transparent, #f0f0f0)",
+                  borderBottomLeftRadius: "1%",
+                  borderBottomRightRadius: "1%",
                   animation: "fadeIn 1s ease-in-out",
                 },
                 "@keyframes fadeIn": {
