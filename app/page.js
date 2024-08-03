@@ -815,95 +815,17 @@ export default function Home() {
               alignItems="center"
               padding={2}
               bgcolor="#e0e0e0"
-              sx={{
-                "@media (max-width: 600px)": {
-                  width: "25%",
-                  flexDirection: "column",
-                  alignItems: "flex-start",
-                  backgroundColor: "#e0e0e0",
-                },
-              }}
             >
-              <Typography
-                variant="h6"
-                color="#333"
-                textAlign="center"
-                flex={1}
-                sx={{
-                  "@media (max-width: 600px)": {
-                    fontSize: "1rem",
-                    marginTop: "-5px",
-                  },
-                }}
-              >
-                Name
-              </Typography>
-              <Typography
-                variant="h6"
-                color="#333"
-                textAlign="center"
-                flex={1}
-                sx={{
-                  "@media (max-width: 600px)": {
-                    fontSize: "1rem",
-                  },
-                }}
-              >
-                Genre
-              </Typography>
-              <Typography
-                variant="h6"
-                color="#333"
-                textAlign="center"
-                flex={1}
-                sx={{
-                  "@media (max-width: 600px)": {
-                    fontSize: "1rem",
-                  },
-                }}
-              >
-                Episodes
-              </Typography>
-              <Typography
-                variant="h6"
-                color="#333"
-                textAlign="center"
-                flex={1}
-                sx={{
-                  "@media (max-width: 600px)": {
-                    fontSize: "1rem",
-                  },
-                }}
-              >
-                Priority
-              </Typography>
-              <Typography
-                variant="h6"
-                color="#333"
-                textAlign="center"
-                flex={1}
-                sx={{
-                  "@media (max-width: 600px)": {
-                    fontSize: "1rem",
-                  },
-                }}
-              >
-                Date
-              </Typography>
-              <Typography
-                variant="h6"
-                color="#333"
-                textAlign="center"
-                flex={1}
-                sx={{
-                  "@media (max-width: 600px)": {
-                    fontSize: "1rem",
-                  },
-                }}
-              >
-                Notes
-              </Typography>
-              {customCategories.map((category, index) => (
+              {[
+                "Name",
+                "Genre",
+                "Episodes",
+                "Priority",
+                "Date",
+                "Notes",
+                ...customCategories.map((cat) => cat.name),
+                "Action",
+              ].map((header, index) => (
                 <Typography
                   key={index}
                   variant="h6"
@@ -912,198 +834,46 @@ export default function Home() {
                   flex={1}
                   sx={{
                     "@media (max-width: 600px)": {
-                      fontSize: "1rem",
+                      fontSize: "0.8rem",
                     },
                   }}
                 >
-                  {category.name}
+                  {header}
                 </Typography>
               ))}
-              <Typography
-                variant="h6"
-                color="#333"
-                textAlign="center"
-                flex={1}
-                sx={{
-                  "@media (max-width: 600px)": {
-                    fontSize: "1rem",
-                  },
-                }}
-              >
-                Action
-              </Typography>
             </Box>
-            {/* Item Container */}
-            <Box
-              sx={{
-                flexGrow: 1,
-                overflowY: "auto",
-                "@media (max-width: 600px)": {
-                  display: "flex",
-                  flexDirection: "row",
-                },
-              }}
-            >
-              <Stack
-                width="100%"
-                sx={{
-                  "@media (max-width: 600px)": {
-                    flexDirection: "row",
-                    "& > *:not(:last-child)": {
-                      marginRight: "10px",
-                      marginTop: "-1px",
-                    },
-                  },
-                }}
-              >
-                {(mode === "toWatch" ? toWatch : watched).map(
-                  (
-                    {
-                      name,
-                      priority,
-                      genre,
-                      releaseDate,
-                      episodes,
-                      notes,
-                      customCategories,
-                    },
-                    index
-                  ) => (
-                    <Box
-                      key={name}
-                      width="100%"
-                      bgcolor="#f0f0f0"
-                      display="flex"
-                      justifyContent="space-between"
-                      alignItems="center"
-                      padding={2}
-                      sx={{
-                        "@media (max-width: 600px)": {
-                          flexDirection: "column",
-                          alignItems: "flex-start",
-                        },
-                      }}
-                    >
-                      <Typography
-                        variant="body1"
-                        color="#333"
-                        textAlign="center"
-                        flex={1}
-                        sx={{
-                          "@media (max-width: 600px)": {
-                            marginBottom: "10px",
-                          },
-                        }}
-                      >
-                        {name.charAt(0).toUpperCase() + name.slice(1)}
-                      </Typography>
-                      <Typography
-                        variant="body1"
-                        color="#333"
-                        textAlign="center"
-                        flex={1}
-                        sx={{
-                          "@media (max-width: 600px)": {
-                            marginBottom: "10px",
-                          },
-                        }}
-                      >
-                        {genre}
-                      </Typography>
-                      <Typography
-                        variant="body1"
-                        color="#333"
-                        textAlign="center"
-                        flex={1}
-                        sx={{
-                          "@media (max-width: 600px)": {
-                            marginBottom: "10px",
-                          },
-                        }}
-                      >
-                        {episodes}
-                      </Typography>
-                      <Typography
-                        variant="body1"
-                        color="#333"
-                        textAlign="center"
-                        flex={1}
-                        sx={{
-                          "@media (max-width: 600px)": {
-                            marginBottom: "10px",
-                          },
-                        }}
-                      >
-                        {priority}
-                      </Typography>
-                      <Typography
-                        variant="body1"
-                        color="#333"
-                        textAlign="center"
-                        flex={1}
-                        sx={{
-                          "@media (max-width: 600px)": {
-                            marginBottom: "10px",
-                          },
-                        }}
-                      >
-                        {releaseDate}
-                      </Typography>
-                      <Typography
-                        variant="body1"
-                        color="#333"
-                        textAlign="center"
-                        flex={1}
-                        sx={{
-                          "@media (max-width: 600px)": {
-                            marginBottom: "10px",
-                          },
-                        }}
-                      >
-                        {notes}
-                      </Typography>
-                      {customCategories.map((category, index) => (
-                        <Typography
-                          key={index}
-                          variant="body1"
-                          color="#333"
-                          textAlign="center"
-                          flex={1}
-                          sx={{
-                            "@media (max-width: 600px)": {
-                              marginBottom: "10px",
-                            },
-                          }}
-                        >
-                          {category.value}
-                        </Typography>
-                      ))}
 
-                      {/* Action Buttons */}
-                      <Box
-                        flex={1}
-                        display="flex"
-                        justifyContent="center"
-                        sx={{
-                          "@media (max-width: 600px)": {
-                            width: "100%",
-                          },
-                        }}
-                      >
+            {/* Item Container */}
+            <Box sx={{ flexGrow: 1, overflowY: "auto" }}>
+              {(mode === "toWatch" ? toWatch : watched).map(
+                (item, rowIndex) => (
+                  <Box
+                    key={rowIndex}
+                    width="100%"
+                    bgcolor={rowIndex % 2 === 0 ? "#f0f0f0" : "#ffffff"}
+                    display="flex"
+                    justifyContent="space-between"
+                    alignItems="center"
+                    padding={2}
+                  >
+                    {[
+                      item.name,
+                      item.genre,
+                      item.episodes,
+                      item.priority,
+                      item.releaseDate,
+                      item.notes,
+                      ...customCategories.map((cat) => {
+                        const categoryItem = item.customCategories.find(
+                          (c) => c.name === cat.name
+                        );
+                        return categoryItem ? categoryItem.value : "";
+                      }),
+                      <Box key="actions" display="flex" justifyContent="center">
                         <Button
                           variant="outlined"
                           size="small"
-                          onClick={() =>
-                            handleEditOpen({
-                              name,
-                              priority,
-                              genre,
-                              releaseDate,
-                              episodes,
-                              notes,
-                              customCategories,
-                            })
-                          }
+                          onClick={() => handleEditOpen(item)}
                           sx={{ mr: 2 }}
                         >
                           Edit
@@ -1111,15 +881,30 @@ export default function Home() {
                         <Button
                           variant="outlined"
                           size="small"
-                          onClick={() => handleConfirmOpen(name)}
+                          onClick={() => handleConfirmOpen(item.name)}
                         >
                           {mode === "toWatch" ? "Watched" : "Remove"}
                         </Button>
-                      </Box>
-                    </Box>
-                  )
-                )}
-              </Stack>
+                      </Box>,
+                    ].map((cell, cellIndex) => (
+                      <Typography
+                        key={cellIndex}
+                        variant="body1"
+                        color="#333"
+                        textAlign="center"
+                        flex={1}
+                        sx={{
+                          "@media (max-width: 600px)": {
+                            fontSize: "0.8rem",
+                          },
+                        }}
+                      >
+                        {cell}
+                      </Typography>
+                    ))}
+                  </Box>
+                )
+              )}
             </Box>
           </Box>
         </Box>
@@ -1262,6 +1047,7 @@ export default function Home() {
             <Button
               variant="contained"
               color="success"
+              size="small"
               onClick={handleAddCategory}
             >
               Add Category
@@ -1269,7 +1055,11 @@ export default function Home() {
             <Button variant="outlined" size="small" onClick={handleClose}>
               Cancel
             </Button>
-            <Button variant="contained" onClick={() => addItem(itemName)}>
+            <Button
+              variant="contained"
+              size="small"
+              onClick={() => addItem(itemName)}
+            >
               Add Item
             </Button>
           </Box>
@@ -1411,8 +1201,9 @@ export default function Home() {
           ))}
           <Button
             variant="contained"
+            size="small"
             onClick={handleAddCategory}
-            sx={{ mt: 2 }}
+            sx={{ mt: 2, backgroundColor: "green" }}
           >
             Add Category
           </Button>
