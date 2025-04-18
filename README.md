@@ -38,5 +38,3 @@ Try out ListVaults [here](https://listvaults.vercel.app/)
 ## About
 
 ListVaults is an open-source project designed to provide a robust solution for inventory management needs. Whether you're managing a small shop or tracking personal collections, ListVaults offers the tools you need to stay organized.
-
-For more information, feature requests, or bug reports, please visit my [GitHub repository](https://github.com/YangLin14/ListVaults).
