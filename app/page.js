@@ -1,7 +1,7 @@
 "use client";
 import Image from "next/image";
 import { useState, useEffect } from "react";
-import { firestore } from "@/firebase";
+import { firestore, auth, signIn, signUp, logOut } from "@/firebase";
 import {
   Box,
   Typography,
@@ -67,6 +67,9 @@ export default function Home() {
   const [confirmMessage, setConfirmMessage] = useState("");
   const [listToRemove, setListToRemove] = useState(null);
   const [customCategories, setCustomCategories] = useState([]);
+  const [profileOpen, setProfileOpen] = useState(false);
+  const [username, setUsername] = useState("");
+  const [updateError, setUpdateError] = useState("");
 
   const predefinedGenres = [
     "Action",
@@ -336,9 +339,13 @@ export default function Home() {
     setAnchorEl(null);
   };
 
-  const handleLogout = () => {
-    // Add your logout logic here
-    console.log("User logged out");
+  const handleLogout = async () => {
+    const { error } = await logOut();
+    if (error) {
+      console.error("Logout failed:", error);
+      return;
+    }
+    
     setUser(null);
     setToWatch([]);
     setWatched([]);
@@ -348,46 +355,46 @@ export default function Home() {
   };
 
   const handleLogin = async () => {
-    const userName = document.getElementById("login-username").value;
+    const email = document.getElementById("login-username").value;
     const password = document.getElementById("login-password").value;
 
-    const userDocRef = doc(firestore, "users", userName);
-    const userDocSnap = await getDoc(userDocRef);
-
-    if (userDocSnap.exists() && userDocSnap.data().password === password) {
-      setUser(userName);
-      console.log("User logged in");
-      handleMenuClose();
-      handleLoginClose();
-      updateLists(); // Load data after login
-      updateListNames(); // Load list names after login
-    } else {
-      setLoginError("Incorrect username or password");
+    const { user, error } = await signIn(email, password);
+    if (error) {
+      setLoginError(error);
+      return;
     }
+
+    setUser(user.uid);
+    handleMenuClose();
+    handleLoginClose();
+    updateLists();
+    updateListNames();
   };
 
   const handleSignup = async () => {
-    const userName = document.getElementById("signup-username").value;
+    const email = document.getElementById("signup-username").value;
     const password = document.getElementById("signup-password").value;
+    const initialUsername = document.getElementById("signup-displayname").value;
 
-    const userDocRef = doc(firestore, "users", userName);
-    const userDocSnap = await getDoc(userDocRef);
-
-    if (userDocSnap.exists()) {
-      setSignupError("Username already exists. Directing to login.");
-      setTimeout(() => {
-        handleSignupClose();
-        handleLoginOpen();
-      }, 2000);
-    } else {
-      await setDoc(userDocRef, { password });
-      setUser(userName);
-      console.log("User signed up and logged in");
-      handleMenuClose();
-      handleSignupClose();
-      updateLists(); // Load data after signup
-      updateListNames(); // Load list names after signup
+    const { user, error } = await signUp(email, password);
+    if (error) {
+      setSignupError(error);
+      return;
     }
+
+    // Create initial user document
+    await setDoc(doc(firestore, "users", user.uid), {
+      email: email,
+      username: initialUsername,
+      createdAt: new Date().toISOString()
+    });
+
+    setUser(user.uid);
+    setUsername(initialUsername);
+    handleMenuClose();
+    handleSignupClose();
+    updateLists();
+    updateListNames();
   };
 
   const handleListClick = (event) => {
@@ -466,6 +473,42 @@ export default function Home() {
     const updatedCategories = customCategories.filter((_, i) => i !== index);
     setCustomCategories(updatedCategories);
   };
+
+  const handleProfileOpen = () => {
+    setProfileOpen(true);
+  };
+
+  const handleProfileClose = () => {
+    setProfileOpen(false);
+    setUpdateError("");
+  };
+
+  const handleUpdateProfile = async () => {
+    if (!user) return;
+
+    try {
+      const userRef = doc(firestore, "users", user);
+      await updateDoc(userRef, {
+        username: username
+      });
+      handleProfileClose();
+      showNotification("Profile updated successfully!");
+    } catch (error) {
+      setUpdateError("Failed to update profile: " + error.message);
+    }
+  };
+
+  useEffect(() => {
+    const fetchUserProfile = async () => {
+      if (user) {
+        const userDoc = await getDoc(doc(firestore, "users", user));
+        if (userDoc.exists()) {
+          setUsername(userDoc.data().username || "");
+        }
+      }
+    };
+    fetchUserProfile();
+  }, [user]);
 
   return (
     <>
@@ -700,8 +743,16 @@ export default function Home() {
                     />
                   </Box>
                   <Typography variant="h6">
-                    {user ? user : "User Name"}
+                    {username || "User"}
                   </Typography>
+                  <Button
+                    variant="contained"
+                    color="primary"
+                    onClick={handleProfileOpen}
+                    sx={{ marginTop: "10px" }}
+                  >
+                    Edit Profile
+                  </Button>
                   {!user && (
                     <Button
                       variant="contained"
@@ -1319,7 +1370,8 @@ export default function Home() {
           </Typography>
           <TextField
             fullWidth
-            label="User Name"
+            label="Email"
+            type="email"
             id="login-username"
             margin="normal"
           />
@@ -1379,7 +1431,8 @@ export default function Home() {
           </Typography>
           <TextField
             fullWidth
-            label="User Name"
+            label="Email"
+            type="email"
             id="signup-username"
             margin="normal"
           />
@@ -1388,6 +1441,12 @@ export default function Home() {
             label="Password"
             type="password"
             id="signup-password"
+            margin="normal"
+          />
+          <TextField
+            fullWidth
+            label="Display Name"
+            id="signup-displayname"
             margin="normal"
           />
           {signupError && (
@@ -1417,33 +1476,76 @@ export default function Home() {
           </Typography>
         </Box>
       </Modal>
-      <Dialog
-        open={confirmOpen}
-        onClose={handleConfirmClose}
-        aria-labelledby="alert-dialog-title"
-        aria-describedby="alert-dialog-description"
-      >
-        <DialogTitle id="alert-dialog-title">{"Confirm Action"}</DialogTitle>
-        <DialogContent>
-          <DialogContentText id="alert-dialog-description">
-            {confirmMessage}
-          </DialogContentText>
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={handleConfirmClose} color="primary">
-            Cancel
-          </Button>
-          <Button
-            onClick={
-              listToRemove ? handleConfirmRemoveList : handleConfirmRemove
-            }
-            color="primary"
-            autoFocus
-          >
-            Confirm
-          </Button>
-        </DialogActions>
-      </Dialog>
+      <Modal open={confirmOpen} onClose={handleConfirmClose}>
+        <Dialog
+          open={confirmOpen}
+          onClose={handleConfirmClose}
+          aria-labelledby="alert-dialog-title"
+          aria-describedby="alert-dialog-description"
+        >
+          <DialogTitle id="alert-dialog-title">{"Confirm Action"}</DialogTitle>
+          <DialogContent>
+            <DialogContentText id="alert-dialog-description">
+              {confirmMessage}
+            </DialogContentText>
+          </DialogContent>
+          <DialogActions>
+            <Button onClick={handleConfirmClose} color="primary">
+              Cancel
+            </Button>
+            <Button
+              onClick={
+                listToRemove ? handleConfirmRemoveList : handleConfirmRemove
+              }
+              color="primary"
+              autoFocus
+            >
+              Confirm
+            </Button>
+          </DialogActions>
+        </Dialog>
+      </Modal>
+      <Modal open={profileOpen} onClose={handleProfileClose}>
+        <Box
+          sx={{
+            position: "absolute",
+            top: "50%",
+            left: "50%",
+            transform: "translate(-50%, -50%)",
+            width: 400,
+            bgcolor: "background.paper",
+            boxShadow: 24,
+            p: 4,
+            "@media (max-width: 600px)": {
+              width: "90%",
+            },
+          }}
+        >
+          <Typography variant="h6" component="h2" gutterBottom>
+            Edit Profile
+          </Typography>
+          <TextField
+            fullWidth
+            label="Username"
+            value={username}
+            onChange={(e) => setUsername(e.target.value)}
+            margin="normal"
+          />
+          {updateError && (
+            <Typography variant="body2" color="error" gutterBottom>
+              {updateError}
+            </Typography>
+          )}
+          <Box sx={{ mt: 2, display: "flex", gap: 2 }}>
+            <Button variant="contained" onClick={handleUpdateProfile}>
+              Save Changes
+            </Button>
+            <Button variant="outlined" onClick={handleProfileClose}>
+              Cancel
+            </Button>
+          </Box>
+        </Box>
+      </Modal>
     </>
   );
 }
