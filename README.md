@@ -2,6 +2,8 @@
 
 ListVaults is a modern inventory management system built with Next.js and Firebase, providing a secure and efficient way to manage your inventory items. The application offers a seamless experience for users to track, organize, and manage their inventory in real-time.
 
+Try out ListVaults [here](https://listvaults.vercel.app/)
+
 ## Features
 
 - **User Authentication**
